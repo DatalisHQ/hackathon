@@ -1,9 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
-import type { Stage, StageId, BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from './types'
+import type { Stage, BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from './types'
 import { URLInput } from './components/URLInput'
 import { BuildProgress } from './components/BuildProgress'
 import { ResultsPanel } from './components/ResultsPanel'
+import { ThinkingStream } from './components/ThinkingStream'
+import type { ThinkingLine } from './components/ThinkingStream'
 import { buildCampaign } from './lib/engine'
 
 const INITIAL_STAGES: Stage[] = [
@@ -25,11 +27,11 @@ export default function App() {
   const [audiences, setAudiences] = useState<AudiencePersona[]>()
   const [creatives, setCreatives] = useState<AdCreative[]>()
   const [campaign, setCampaign] = useState<CampaignConfig>()
+  const [thinkingLines, setThinkingLines] = useState<ThinkingLine[]>([])
   const [url, setUrl] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const startTimeRef = useRef<number>(0)
-  const resultsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isBuilding) {
@@ -52,12 +54,21 @@ export default function App() {
     setAudiences(undefined)
     setCreatives(undefined)
     setCampaign(undefined)
+    setThinkingLines([])
 
     await buildCampaign(inputUrl, (update) => {
       if (update.stage) {
         setStages(prev => prev.map(s =>
           s.id === update.stage!.id ? { ...s, ...update.stage!.changes } : s
         ))
+      }
+      if (update.thinking) {
+        setThinkingLines(prev => [...prev, {
+          id: crypto.randomUUID(),
+          type: update.thinking!.type,
+          text: update.thinking!.text,
+          timestamp: Date.now(),
+        }])
       }
       if (update.business) setBusiness(update.business)
       if (update.audiences) setAudiences(update.audiences)
@@ -74,10 +85,10 @@ export default function App() {
   const showBuilder = isBuilding || isComplete
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="h-screen flex flex-col bg-bg overflow-hidden">
       {/* Header */}
-      <header className="border-b border-border bg-surface/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <header className="border-b border-border bg-surface/50 backdrop-blur-sm flex-shrink-0 z-50">
+        <div className="px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-white" />
@@ -107,22 +118,29 @@ export default function App() {
 
       {/* Main */}
       {!showBuilder ? (
-        <URLInput onSubmit={handleSubmit} isBuilding={isBuilding} />
+        <div className="flex-1 overflow-y-auto">
+          <URLInput onSubmit={handleSubmit} isBuilding={isBuilding} />
+        </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex gap-6">
-            {/* Left: Progress */}
-            <BuildProgress stages={stages} />
-
-            {/* Right: Results */}
-            <div ref={resultsRef} className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-100px)]">
-              <ResultsPanel
-                business={business}
-                audiences={audiences}
-                creatives={creatives}
-                campaign={campaign}
-              />
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left: Progress + Thinking */}
+          <div className="w-80 flex-shrink-0 flex flex-col border-r border-border">
+            <div className="p-4 flex-shrink-0">
+              <BuildProgress stages={stages} />
             </div>
+            <div className="flex-1 px-4 pb-4 min-h-0">
+              <ThinkingStream lines={thinkingLines} isActive={isBuilding} />
+            </div>
+          </div>
+
+          {/* Right: Results */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <ResultsPanel
+              business={business}
+              audiences={audiences}
+              creatives={creatives}
+              campaign={campaign}
+            />
           </div>
         </div>
       )}

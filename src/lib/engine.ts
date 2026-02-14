@@ -10,12 +10,15 @@ function randomBetween(min: number, max: number): number {
 
 // ─── Callbacks ─────────────────────────────────────────────────────────────
 
+export type ThinkingLineType = 'system' | 'data' | 'insight' | 'decision' | 'highlight'
+
 type UpdateCallback = (update: {
   stage?: { id: StageId; changes: Partial<Stage> }
   business?: BusinessProfile
   audiences?: AudiencePersona[]
   creatives?: AdCreative[]
   campaign?: CampaignConfig
+  thinking?: { type: ThinkingLineType; text: string }
 }) => void
 
 // ─── Website Scraping ──────────────────────────────────────────────────────
@@ -325,6 +328,7 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 1: Scrape ──
   onUpdate({ stage: { id: 'scrape', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: `→ Connecting to ${url}...` } })
   
   for (const text of thinkingTexts.scrape) {
     onUpdate({ stage: { id: 'scrape', changes: { thinkingText: text } } })
@@ -333,6 +337,25 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   const scraped = await scrapeWebsite(url)
   
+  onUpdate({ thinking: { type: 'data', text: `Title: "${scraped.title}"` } })
+  await delay(200)
+  if (scraped.description) {
+    onUpdate({ thinking: { type: 'data', text: `Meta: "${scraped.description.slice(0, 120)}..."` } })
+    await delay(200)
+  }
+  onUpdate({ thinking: { type: 'data', text: `Extracted ${scraped.text.length} chars of page content` } })
+  await delay(150)
+  
+  // Show snippets of what was scraped
+  const words = scraped.text.split(' ').filter(w => w.length > 3)
+  const snippetLength = Math.min(words.length, 15)
+  if (snippetLength > 5) {
+    onUpdate({ thinking: { type: 'data', text: `"${words.slice(0, snippetLength).join(' ')}..."` } })
+    await delay(300)
+  }
+  
+  onUpdate({ thinking: { type: 'highlight', text: `✓ Website scanned successfully` } })
+
   onUpdate({ stage: { id: 'scrape', changes: { 
     status: 'completed', 
     completedAt: Date.now(),
@@ -343,6 +366,7 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 2: Analyse ──
   onUpdate({ stage: { id: 'analyse', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: '→ Sending page content to Claude for analysis...' } })
   
   for (const text of thinkingTexts.analyse) {
     onUpdate({ stage: { id: 'analyse', changes: { thinkingText: text } } })
@@ -350,6 +374,25 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
   }
 
   const business = await analyseBusiness(url, scraped)
+  
+  onUpdate({ thinking: { type: 'insight', text: `Business identified: ${business.name}` } })
+  await delay(200)
+  onUpdate({ thinking: { type: 'insight', text: `Industry: ${business.industry}` } })
+  await delay(200)
+  onUpdate({ thinking: { type: 'insight', text: `Location: ${business.location}` } })
+  await delay(200)
+  onUpdate({ thinking: { type: 'insight', text: `Brand tone: ${business.tone}` } })
+  await delay(150)
+  for (const s of business.strengths) {
+    onUpdate({ thinking: { type: 'data', text: `  ✓ Strength: ${s}` } })
+    await delay(100)
+  }
+  for (const w of business.weaknesses) {
+    onUpdate({ thinking: { type: 'data', text: `  → Opportunity: ${w}` } })
+    await delay(100)
+  }
+  onUpdate({ thinking: { type: 'highlight', text: `✓ Business profile complete` } })
+  
   onUpdate({ business })
   
   onUpdate({ stage: { id: 'analyse', changes: { 
@@ -362,6 +405,7 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 3: Audience ──
   onUpdate({ stage: { id: 'audience', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: '→ Building audience personas from business profile...' } })
   
   for (const text of thinkingTexts.audience) {
     onUpdate({ stage: { id: 'audience', changes: { thinkingText: text } } })
@@ -369,6 +413,19 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
   }
 
   const audiences = await generateAudiences(business)
+  
+  for (const a of audiences) {
+    onUpdate({ thinking: { type: 'decision', text: `${a.emoji} Persona: "${a.name}" (${a.age})` } })
+    await delay(250)
+    for (const interest of a.interests.slice(0, 3)) {
+      onUpdate({ thinking: { type: 'data', text: `    Interest: ${interest}` } })
+      await delay(80)
+    }
+    onUpdate({ thinking: { type: 'data', text: `    Pain: ${a.painPoints[0]}` } })
+    await delay(100)
+  }
+  onUpdate({ thinking: { type: 'highlight', text: `✓ ${audiences.length} audience personas created` } })
+  
   onUpdate({ audiences })
   
   onUpdate({ stage: { id: 'audience', changes: { 
@@ -381,11 +438,22 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 4: Strategy ──
   onUpdate({ stage: { id: 'strategy', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: '→ Determining optimal campaign strategy...' } })
   
   for (const text of thinkingTexts.strategy) {
     onUpdate({ stage: { id: 'strategy', changes: { thinkingText: text } } })
     await delay(randomBetween(300, 700))
   }
+
+  onUpdate({ thinking: { type: 'decision', text: 'Objective: Lead Generation (best for service businesses)' } })
+  await delay(200)
+  onUpdate({ thinking: { type: 'decision', text: 'Budget: $30/day — enough data for Andromeda to optimise' } })
+  await delay(200)
+  onUpdate({ thinking: { type: 'decision', text: 'Duration: 14-day test flight — 7 days learning, 7 days optimising' } })
+  await delay(200)
+  onUpdate({ thinking: { type: 'insight', text: 'Strategy: Broad targeting + diverse creatives. Let Meta\'s algorithm find the best audience.' } })
+  await delay(150)
+  onUpdate({ thinking: { type: 'highlight', text: '✓ Strategy locked in' } })
 
   onUpdate({ stage: { id: 'strategy', changes: { 
     status: 'completed', 
@@ -397,6 +465,7 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 5: Copy ──
   onUpdate({ stage: { id: 'copy', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: '→ Writing ad copy with Claude...' } })
   
   for (const text of thinkingTexts.copy) {
     onUpdate({ stage: { id: 'copy', changes: { thinkingText: text } } })
@@ -404,6 +473,26 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
   }
 
   const creatives = await generateAdCopy(business, audiences)
+  
+  for (let i = 0; i < creatives.length; i++) {
+    const c = creatives[i]
+    onUpdate({ thinking: { type: 'decision', text: `Ad ${i + 1} — Angle: "${c.angle}"` } })
+    await delay(200)
+    // Simulate typing the headline
+    const words = c.headline.split(' ')
+    let typed = ''
+    for (const word of words) {
+      typed += (typed ? ' ' : '') + word
+      onUpdate({ thinking: { type: 'data', text: `    Headline: ${typed}█` } })
+      await delay(randomBetween(60, 150))
+    }
+    onUpdate({ thinking: { type: 'data', text: `    Headline: ${c.headline}` } })
+    await delay(100)
+    onUpdate({ thinking: { type: 'data', text: `    CTA: [${c.cta}]` } })
+    await delay(150)
+  }
+  onUpdate({ thinking: { type: 'highlight', text: `✓ ${creatives.length} ad variants written` } })
+  
   onUpdate({ creatives })
   
   onUpdate({ stage: { id: 'copy', changes: { 
@@ -416,11 +505,17 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 6: Creatives ──
   onUpdate({ stage: { id: 'creatives', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: '→ Generating visual concepts for ad creatives...' } })
   
-  for (const text of thinkingTexts.creatives) {
-    onUpdate({ stage: { id: 'creatives', changes: { thinkingText: text } } })
-    await delay(randomBetween(600, 1200))
+  for (let i = 0; i < creatives.length; i++) {
+    onUpdate({ stage: { id: 'creatives', changes: { thinkingText: `Designing creative ${i + 1}/${creatives.length}...` } } })
+    onUpdate({ thinking: { type: 'data', text: `  Prompt: "${creatives[i].imagePrompt.slice(0, 80)}..."` } })
+    await delay(randomBetween(800, 1500))
+    onUpdate({ thinking: { type: 'insight', text: `  ✓ Creative ${i + 1} generated (${creatives[i].angle})` } })
+    await delay(200)
   }
+
+  onUpdate({ thinking: { type: 'highlight', text: `✓ ${creatives.length} ad creatives designed` } })
 
   onUpdate({ stage: { id: 'creatives', changes: { 
     status: 'completed', 
@@ -432,6 +527,7 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
 
   // ── Stage 7: Campaign assembly ──
   onUpdate({ stage: { id: 'campaign', changes: { status: 'running', startedAt: Date.now() } } })
+  onUpdate({ thinking: { type: 'system', text: '→ Assembling final campaign configuration...' } })
   
   for (const text of thinkingTexts.campaign) {
     onUpdate({ stage: { id: 'campaign', changes: { thinkingText: text } } })
@@ -439,6 +535,15 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
   }
 
   const campaign = assembleCampaign(business, audiences, creatives)
+  
+  onUpdate({ thinking: { type: 'decision', text: `Daily budget: $${campaign.dailyBudget} ${campaign.currency}` } })
+  await delay(150)
+  onUpdate({ thinking: { type: 'decision', text: `Estimated reach: ${campaign.estimatedReach}` } })
+  await delay(150)
+  onUpdate({ thinking: { type: 'decision', text: `Estimated cost per lead: ${campaign.estimatedCpl}` } })
+  await delay(150)
+  onUpdate({ thinking: { type: 'highlight', text: '✓ Campaign ready to launch 🚀' } })
+  
   onUpdate({ campaign })
   
   onUpdate({ stage: { id: 'campaign', changes: { 
