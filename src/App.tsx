@@ -27,7 +27,7 @@ export default function App() {
   const [campaign, setCampaign] = useState<CampaignConfig>()
   const [url, setUrl] = useState('')
   const [elapsed, setElapsed] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setInterval>>()
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const startTimeRef = useRef<number>(0)
   const resultsRef = useRef<HTMLDivElement>(null)
 
