@@ -1,117 +1,131 @@
-import { useState, useCallback } from 'react'
-import { Cpu, Wifi } from 'lucide-react'
-import type { ChatMessage, ToolCall, AgentStatus } from './types'
-import { ChatPanel } from './components/ChatPanel'
-import { ActionFeed } from './components/ActionFeed'
-import { sendMessage } from './lib/agent'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { Sparkles } from 'lucide-react'
+import type { Stage, StageId, BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from './types'
+import { URLInput } from './components/URLInput'
+import { BuildProgress } from './components/BuildProgress'
+import { ResultsPanel } from './components/ResultsPanel'
+import { buildCampaign } from './lib/engine'
+
+const INITIAL_STAGES: Stage[] = [
+  { id: 'scrape', label: 'Scan Website', description: 'Reading your website content', status: 'pending' },
+  { id: 'analyse', label: 'Analyse Business', description: 'Understanding your business model', status: 'pending' },
+  { id: 'audience', label: 'Find Audiences', description: 'Building target personas', status: 'pending' },
+  { id: 'strategy', label: 'Plan Strategy', description: 'Choosing campaign approach', status: 'pending' },
+  { id: 'copy', label: 'Write Ad Copy', description: 'Crafting persuasive messages', status: 'pending' },
+  { id: 'creatives', label: 'Design Creatives', description: 'Generating visual ads', status: 'pending' },
+  { id: 'campaign', label: 'Build Campaign', description: 'Assembling everything', status: 'pending' },
+  { id: 'complete', label: 'Ready to Launch', description: 'Campaign complete', status: 'pending' },
+]
 
 export default function App() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [allTools, setAllTools] = useState<ToolCall[]>([])
-  const [agentStatus, setAgentStatus] = useState<AgentStatus>('idle')
+  const [isBuilding, setIsBuilding] = useState(false)
+  const [isComplete, setIsComplete] = useState(false)
+  const [stages, setStages] = useState<Stage[]>(INITIAL_STAGES)
+  const [business, setBusiness] = useState<BusinessProfile>()
+  const [audiences, setAudiences] = useState<AudiencePersona[]>()
+  const [creatives, setCreatives] = useState<AdCreative[]>()
+  const [campaign, setCampaign] = useState<CampaignConfig>()
+  const [url, setUrl] = useState('')
+  const [elapsed, setElapsed] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval>>()
+  const startTimeRef = useRef<number>(0)
+  const resultsRef = useRef<HTMLDivElement>(null)
 
-  const handleSend = useCallback(async (text: string) => {
-    // Add user message
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: text,
-      timestamp: Date.now(),
+  useEffect(() => {
+    if (isBuilding) {
+      startTimeRef.current = Date.now()
+      timerRef.current = setInterval(() => {
+        setElapsed(Date.now() - startTimeRef.current)
+      }, 100)
+    } else {
+      clearInterval(timerRef.current)
     }
-    setMessages(prev => [...prev, userMsg])
+    return () => clearInterval(timerRef.current)
+  }, [isBuilding])
 
-    // Create a placeholder for the assistant response
-    const assistantMsgId = crypto.randomUUID()
-    const assistantMsg: ChatMessage = {
-      id: assistantMsgId,
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-      toolCalls: [],
-      isStreaming: true,
-    }
-    setMessages(prev => [...prev, assistantMsg])
+  const handleSubmit = useCallback(async (inputUrl: string) => {
+    setUrl(inputUrl)
+    setIsBuilding(true)
+    setIsComplete(false)
+    setStages([...INITIAL_STAGES])
+    setBusiness(undefined)
+    setAudiences(undefined)
+    setCreatives(undefined)
+    setCampaign(undefined)
 
-    // Run the agent
-    await sendMessage(text, (update) => {
-      if (update.status) {
-        setAgentStatus(update.status)
-      }
-      if (update.toolCall) {
-        const tool = update.toolCall
-        // Update the assistant message's tool calls
-        setMessages(prev => prev.map(m => {
-          if (m.id === assistantMsgId) {
-            const existing = m.toolCalls || []
-            const existingIndex = existing.findIndex(t => t.id === tool.id)
-            const updatedTools = existingIndex >= 0
-              ? existing.map(t => t.id === tool.id ? tool : t)
-              : [...existing, tool]
-            return { ...m, toolCalls: updatedTools }
-          }
-          return m
-        }))
-        // Update global tool list
-        setAllTools(prev => {
-          const existingIndex = prev.findIndex(t => t.id === tool.id)
-          if (existingIndex >= 0) {
-            return prev.map(t => t.id === tool.id ? tool : t)
-          }
-          return [...prev, tool]
-        })
-      }
-      if (update.text) {
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMsgId
-            ? { ...m, content: update.text!, isStreaming: false, timestamp: Date.now() }
-            : m
+    await buildCampaign(inputUrl, (update) => {
+      if (update.stage) {
+        setStages(prev => prev.map(s =>
+          s.id === update.stage!.id ? { ...s, ...update.stage!.changes } : s
         ))
       }
+      if (update.business) setBusiness(update.business)
+      if (update.audiences) setAudiences(update.audiences)
+      if (update.creatives) setCreatives(update.creatives)
+      if (update.campaign) {
+        setCampaign(update.campaign)
+        setIsComplete(true)
+      }
     })
+
+    setIsBuilding(false)
   }, [])
 
+  const showBuilder = isBuilding || isComplete
+
   return (
-    <div className="h-screen flex flex-col bg-bg">
-      {/* Top bar */}
-      <header className="border-b border-border bg-surface/80 backdrop-blur-sm flex-shrink-0">
-        <div className="px-4 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-              <Cpu className="w-4 h-4 text-accent" />
+    <div className="min-h-screen bg-bg">
+      {/* Header */}
+      <header className="border-b border-border bg-surface/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
             </div>
-            <div>
-              <h1 className="text-sm font-semibold text-text leading-tight">OpenClaw Agent</h1>
-              <p className="text-[10px] text-text-dim">Autonomous AI with real-world tools</p>
-            </div>
+            <span className="font-semibold text-text text-sm">AdForge</span>
+            <span className="text-[10px] text-text-dim bg-surface-2 px-2 py-0.5 rounded-full">AI Campaign Builder</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-text-muted">
-              <Wifi className="w-3 h-3 text-success" />
-              <span>Connected</span>
-            </div>
-            <div className="text-[10px] text-text-dim bg-surface-2 px-2 py-1 rounded-full">
-              {allTools.length} actions
-            </div>
+          <div className="flex items-center gap-4">
+            {isBuilding && (
+              <div className="flex items-center gap-2 text-xs text-text-muted">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent pulse-dot" />
+                Building... {(elapsed / 1000).toFixed(1)}s
+              </div>
+            )}
+            {isComplete && (
+              <div className="flex items-center gap-2 text-xs text-success">
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                Complete — {(elapsed / 1000).toFixed(1)}s
+              </div>
+            )}
+            {showBuilder && url && (
+              <div className="text-xs text-text-dim truncate max-w-[200px]">{url}</div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main content — split view */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Chat — left side */}
-        <div className="flex-1 flex flex-col border-r border-border">
-          <ChatPanel
-            messages={messages}
-            agentStatus={agentStatus}
-            onSend={handleSend}
-          />
-        </div>
+      {/* Main */}
+      {!showBuilder ? (
+        <URLInput onSubmit={handleSubmit} isBuilding={isBuilding} />
+      ) : (
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex gap-6">
+            {/* Left: Progress */}
+            <BuildProgress stages={stages} />
 
-        {/* Action feed — right side */}
-        <div className="w-80 flex-shrink-0 flex flex-col bg-surface/30">
-          <ActionFeed tools={allTools} />
+            {/* Right: Results */}
+            <div ref={resultsRef} className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-100px)]">
+              <ResultsPanel
+                business={business}
+                audiences={audiences}
+                creatives={creatives}
+                campaign={campaign}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

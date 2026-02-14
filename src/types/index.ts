@@ -1,45 +1,81 @@
-export type ToolName = 
-  | 'web_search'
-  | 'web_fetch' 
-  | 'browser'
-  | 'exec'
-  | 'read'
-  | 'write'
-  | 'edit'
-  | 'memory_search'
-  | 'image'
-  | 'tts'
-  | 'message'
-  | 'cron'
-  | 'nodes'
-  | 'unknown'
+export type StageId = 
+  | 'scrape'
+  | 'analyse' 
+  | 'audience'
+  | 'strategy'
+  | 'copy'
+  | 'creatives'
+  | 'campaign'
+  | 'complete'
 
-export interface ToolCall {
-  id: string
-  name: ToolName
-  displayName: string
-  params: Record<string, any>
-  result?: any
-  status: 'running' | 'completed' | 'error'
-  startedAt: number
+export type StageStatus = 'pending' | 'running' | 'completed' | 'error'
+
+export interface Stage {
+  id: StageId
+  label: string
+  description: string
+  status: StageStatus
+  startedAt?: number
   completedAt?: number
+  data?: any
+  thinkingText?: string
 }
 
-export interface ChatMessage {
+export interface BusinessProfile {
+  url: string
+  name: string
+  description: string
+  industry: string
+  location: string
+  strengths: string[]
+  weaknesses: string[]
+  targetCustomer: string
+  tone: string
+  colors: string[]
+  logoUrl?: string
+}
+
+export interface AudiencePersona {
+  name: string
+  age: string
+  description: string
+  interests: string[]
+  painPoints: string[]
+  platforms: string[]
+  emoji: string
+}
+
+export interface AdCreative {
   id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  timestamp: number
-  toolCalls?: ToolCall[]
-  isStreaming?: boolean
+  headline: string
+  primaryText: string
+  cta: string
+  imagePrompt: string
+  imageUrl?: string
+  angle: string
 }
 
-export type AgentStatus = 'idle' | 'thinking' | 'acting' | 'waiting'
+export interface CampaignConfig {
+  objective: string
+  dailyBudget: number
+  currency: string
+  duration: number
+  audiences: AudiencePersona[]
+  creatives: AdCreative[]
+  estimatedReach: string
+  estimatedCpl: string
+  estimatedClicks: string
+}
 
-export interface AgentState {
-  status: AgentStatus
-  currentTool?: string
-  uptime: number
-  messagesProcessed: number
-  toolsUsed: number
+export interface CampaignBuild {
+  url: string
+  status: 'idle' | 'building' | 'complete' | 'error'
+  stages: Stage[]
+  business?: BusinessProfile
+  audiences?: AudiencePersona[]
+  creatives?: AdCreative[]
+  campaign?: CampaignConfig
+  error?: string
+  startedAt?: number
+  completedAt?: number
 }
