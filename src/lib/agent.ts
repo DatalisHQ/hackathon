@@ -1,4 +1,4 @@
-import type { ToolCall, ToolName, ChatMessage } from '../types'
+import type { ToolCall, ToolName } from '../types'
 
 // ─── Tool display names & icons ────────────────────────────────────────────
 
@@ -29,26 +29,8 @@ function classifyTool(name: string): ToolName {
 // For the hackathon demo, we simulate realistic agent behavior with
 // real tool call patterns and streaming-style delivery.
 
-interface AgentResponse {
-  text: string
-  toolCalls: ToolCall[]
-}
-
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function makeToolCall(name: string, params: Record<string, any>, result: any, durationMs: number = 0): ToolCall {
-  return {
-    id: crypto.randomUUID(),
-    name: classifyTool(name),
-    displayName: TOOL_META[classifyTool(name)].label,
-    params,
-    result,
-    status: 'completed',
-    startedAt: Date.now() - durationMs,
-    completedAt: Date.now(),
-  }
 }
 
 type StreamCallback = (update: {
