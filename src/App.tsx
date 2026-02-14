@@ -1,14 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Volume2, VolumeX } from 'lucide-react'
 import type { Stage, BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from './types'
 import { URLInput } from './components/URLInput'
 import { BuildProgress } from './components/BuildProgress'
 import { ResultsPanel } from './components/ResultsPanel'
 import { ThinkingStream } from './components/ThinkingStream'
 import type { ThinkingLine } from './components/ThinkingStream'
+import { AgentBrowser } from './components/AgentBrowser'
 import { buildStrategy, executeCampaign } from './lib/engine'
 import { playTick, playSuccess, playStageComplete } from './lib/sounds'
 import { fireConfetti } from './lib/confetti'
+import { speak, setVoiceEnabled, isVoiceEnabled, stopSpeaking } from './lib/voice'
 
 const INITIAL_STAGES: Stage[] = [
   { id: 'scrape', label: 'Scan Website', description: 'Reading your website content', status: 'pending' },
@@ -34,6 +36,8 @@ export default function App() {
   const [url, setUrl] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [awaitingApproval, setAwaitingApproval] = useState(false)
+  const [voiceOn, setVoiceOn] = useState(isVoiceEnabled())
+  const [currentStageAction, setCurrentStageAction] = useState<string | undefined>(undefined)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const startTimeRef = useRef<number>(0)
   const strategyDataRef = useRef<{ business: BusinessProfile; audiences: AudiencePersona[] } | null>(null)
@@ -55,6 +59,10 @@ export default function App() {
       setStages(prev => prev.map(s =>
         s.id === update.stage!.id ? { ...s, ...update.stage!.changes } : s
       ))
+      // Track the current stage action text for the AgentBrowser
+      if (update.stage.changes?.thinkingText) {
+        setCurrentStageAction(update.stage.changes.thinkingText)
+      }
     }
     if (update.thinking) {
       setThinkingLines(prev => [...prev, {
@@ -65,7 +73,13 @@ export default function App() {
       }])
       if (update.thinking.type === 'highlight') {
         playStageComplete()
-      } else if (update.thinking.type === 'decision' || update.thinking.type === 'insight') {
+        // Speak highlight text (stage completions) with high priority
+        speak(update.thinking.text.replace(/[✓→]/g, '').trim(), 'high')
+      } else if (update.thinking.type === 'decision') {
+        playTick()
+        // Speak key decisions with low priority
+        speak(update.thinking.text.replace(/[✓→]/g, '').trim(), 'low')
+      } else if (update.thinking.type === 'insight') {
         playTick()
       }
     }
@@ -78,10 +92,12 @@ export default function App() {
       setIsComplete(true)
       playSuccess()
       setTimeout(() => fireConfetti(), 300)
+      speak('Your campaign is ready to launch!', 'high')
     }
     if (update.awaitApproval) {
       setAwaitingApproval(true)
       setIsBuilding(false)
+      speak('Strategy complete. Ready to execute your campaign?', 'high')
     }
   }, [])
 
@@ -181,6 +197,21 @@ export default function App() {
             {showBuilder && url && (
               <div className="text-xs text-text-dim truncate max-w-[200px]">{url}</div>
             )}
+            {/* Voice toggle */}
+            {showBuilder && (
+              <button
+                onClick={() => {
+                  const next = !voiceOn
+                  setVoiceOn(next)
+                  setVoiceEnabled(next)
+                  if (!next) stopSpeaking()
+                }}
+                className="p-2 rounded-lg border border-border hover:border-border-bright text-text-muted hover:text-text transition cursor-pointer"
+                title={voiceOn ? 'Mute voice narration' : 'Enable voice narration'}
+              >
+                {voiceOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </button>
+            )}
           </div>
         </div>
         {/* Gradient line under header */}
@@ -206,6 +237,30 @@ export default function App() {
 
           {/* Right: Results */}
           <div className="flex-1 overflow-y-auto p-8">
+            {/* Agent Browser — visible during scrape/analyse stages */}
+            {(() => {
+              const scrapeStage = stages.find(s => s.id === 'scrape')
+              const analyseStage = stages.find(s => s.id === 'analyse')
+              const showBrowser = isBuilding && (
+                scrapeStage?.status === 'running' ||
+                analyseStage?.status === 'running' ||
+                (scrapeStage?.status === 'completed' && analyseStage?.status !== 'completed')
+              )
+              const scanDone = scrapeStage?.status === 'completed'
+              if (showBrowser || (scanDone && analyseStage?.status === 'completed' && !business)) {
+                return (
+                  <div className="mb-6">
+                    <AgentBrowser
+                      url={url}
+                      isActive={isBuilding && !scanDone}
+                      currentAction={currentStageAction}
+                      scanComplete={scanDone && analyseStage?.status === 'completed'}
+                    />
+                  </div>
+                )
+              }
+              return null
+            })()}
             <ResultsPanel
               business={business}
               audiences={audiences}
