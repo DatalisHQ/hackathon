@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target, Pencil, Check, RefreshCw, Share2, Copy, CheckCircle2 } from 'lucide-react'
-import type { BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from '../types'
+import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target, Pencil, Check, RefreshCw, Share2, CheckCircle2, Search, ArrowRight, Shield } from 'lucide-react'
+import type { BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from '../types'
 
 interface Props {
   business?: BusinessProfile
   audiences?: AudiencePersona[]
   creatives?: AdCreative[]
+  googleAds?: GoogleAd[]
   campaign?: CampaignConfig
   onCreativeEdit?: (id: string, field: string, value: string) => void
+  awaitingApproval?: boolean
+  onApprove?: () => void
 }
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -109,6 +112,59 @@ function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
   )
 }
 
+function ApprovalGate({ business, audiences, onApprove }: { business: BusinessProfile; audiences: AudiencePersona[]; onApprove: () => void }) {
+  return (
+    <Section>
+      <div className="bg-surface border-2 border-accent/40 rounded-xl p-6 relative overflow-hidden">
+        {/* Subtle gradient accent */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-purple-500/5 pointer-events-none" />
+        
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-accent-bright" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-text">Strategy Complete</h3>
+              <p className="text-xs text-text-muted">Phase 1 analysis finished — ready for campaign execution</p>
+            </div>
+          </div>
+
+          <div className="bg-surface-2 rounded-lg p-4 mb-4 border border-border">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-text">{business.name}</div>
+                <div className="text-[10px] text-text-dim uppercase tracking-wide">Business</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-accent-bright">{audiences.length}</div>
+                <div className="text-[10px] text-text-dim uppercase tracking-wide">Audiences</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-success">Lead Gen</div>
+                <div className="text-[10px] text-text-dim uppercase tracking-wide">Objective</div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-sm text-text-muted mb-4">
+            We've analysed <strong className="text-text">{business.name}</strong>, identified {audiences.length} target audiences, 
+            and planned a lead generation strategy. Ready to generate ad copy, creatives, and assemble your campaign?
+          </p>
+
+          <button
+            onClick={onApprove}
+            className="w-full py-3.5 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-bright hover:to-purple-400 text-white font-semibold rounded-xl transition cursor-pointer text-sm flex items-center justify-center gap-2 group"
+          >
+            Execute Campaign
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </Section>
+  )
+}
+
 function EditableText({ value, onSave, className = '', multiline = false }: { 
   value: string; onSave: (v: string) => void; className?: string; multiline?: boolean 
 }) {
@@ -155,7 +211,7 @@ function AdPreviewCards({ creatives, onEdit }: { creatives: AdCreative[]; onEdit
     <Section>
       <div className="flex items-center gap-2 mb-3">
         <Zap className="w-4 h-4 text-pink-400" />
-        <h3 className="text-sm font-medium text-text">Ad Creatives</h3>
+        <h3 className="text-sm font-medium text-text">Facebook Ad Creatives</h3>
         <span className="text-[10px] text-text-dim ml-auto">Click any text to edit</span>
       </div>
       <div className="space-y-4">
@@ -211,6 +267,59 @@ function AdPreviewCards({ creatives, onEdit }: { creatives: AdCreative[]; onEdit
                 <Target className="w-3 h-3 text-text-dim" />
                 <span className="text-[10px] text-text-dim">Angle: {ad.angle}</span>
               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
+  return (
+    <Section>
+      <div className="flex items-center gap-2 mb-3">
+        <Search className="w-4 h-4 text-blue-400" />
+        <h3 className="text-sm font-medium text-text">Google Search Ads</h3>
+        <span className="text-[10px] text-text-dim ml-auto">Preview</span>
+      </div>
+      <div className="space-y-3">
+        {googleAds.map((ad, i) => (
+          <div
+            key={ad.id}
+            className="bg-surface border border-border rounded-xl p-4 slide-in"
+            style={{ animationDelay: `${i * 150}ms` }}
+          >
+            {/* Sponsored label */}
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <span className="text-[10px] font-medium text-text-dim bg-surface-2 px-1.5 py-0.5 rounded">Sponsored</span>
+            </div>
+
+            {/* Display URL */}
+            <div className="flex items-center gap-1 mb-1">
+              <div className="w-4 h-4 rounded-full bg-surface-2 border border-border flex items-center justify-center">
+                <span className="text-[8px] text-text-dim">🔒</span>
+              </div>
+              <span className="text-xs text-[#76d6a1]">{ad.displayUrl}</span>
+            </div>
+
+            {/* Headlines as blue links */}
+            <h4 className="text-[#8ab4f8] text-base font-medium leading-snug mb-1.5 hover:underline cursor-pointer">
+              {ad.headlines.join(' | ')}
+            </h4>
+
+            {/* Descriptions */}
+            <div className="space-y-0.5 mb-3">
+              {ad.descriptions.map((desc, j) => (
+                <p key={j} className="text-xs text-text-muted leading-relaxed">{desc}</p>
+              ))}
+            </div>
+
+            {/* Sitelinks */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 border-t border-border">
+              {ad.siteLinks.map((link, j) => (
+                <span key={j} className="text-xs text-[#8ab4f8] hover:underline cursor-pointer">{link}</span>
+              ))}
             </div>
           </div>
         ))}
@@ -294,8 +403,8 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
   )
 }
 
-export function ResultsPanel({ business, audiences, creatives, campaign, onCreativeEdit }: Props) {
-  const hasAnything = business || audiences || creatives || campaign
+export function ResultsPanel({ business, audiences, creatives, googleAds, campaign, onCreativeEdit, awaitingApproval, onApprove }: Props) {
+  const hasAnything = business || audiences || creatives || googleAds || campaign
 
   if (!hasAnything) {
     return (
@@ -309,7 +418,11 @@ export function ResultsPanel({ business, audiences, creatives, campaign, onCreat
     <div className="space-y-6 p-1">
       {business && <BusinessCard business={business} />}
       {audiences && <AudienceCards audiences={audiences} />}
+      {awaitingApproval && business && audiences && !creatives && (
+        <ApprovalGate business={business} audiences={audiences} onApprove={onApprove!} />
+      )}
       {creatives && <AdPreviewCards creatives={creatives} onEdit={onCreativeEdit} />}
+      {googleAds && <GoogleAdCards googleAds={googleAds} />}
       {campaign && <CampaignSummary campaign={campaign} />}
     </div>
   )

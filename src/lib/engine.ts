@@ -1,4 +1,4 @@
-import type { StageId, Stage, BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from '../types'
+import type { StageId, Stage, BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from '../types'
 
 function delay(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms))
@@ -17,8 +17,10 @@ type UpdateCallback = (update: {
   business?: BusinessProfile
   audiences?: AudiencePersona[]
   creatives?: AdCreative[]
+  googleAds?: GoogleAd[]
   campaign?: CampaignConfig
   thinking?: { type: ThinkingLineType; text: string }
+  awaitApproval?: boolean
 }) => void
 
 // ─── Website Scraping ──────────────────────────────────────────────────────
@@ -251,6 +253,100 @@ Return ONLY a JSON array:
   ]
 }
 
+// ─── Google Ads Copy Generation ────────────────────────────────────────────
+
+async function generateGoogleAds(business: BusinessProfile, audiences: AudiencePersona[]): Promise<GoogleAd[]> {
+  const domain = business.url.replace(/https?:\/\//, '').split('/')[0]
+
+  const prompt = `Create 3 Google Search ad variants for this business.
+
+Business: ${business.name}
+Industry: ${business.industry}
+Description: ${business.description}
+URL: ${business.url}
+Strengths: ${business.strengths.join(', ')}
+Target audiences: ${audiences.map(a => a.name).join(', ')}
+
+Return ONLY a JSON array. Each ad has:
+- headlines: array of 3 strings, each max 30 characters
+- descriptions: array of 2 strings, each max 90 characters
+- displayUrl: the display URL path (just the domain, no https://)
+- siteLinks: array of 2-3 short link labels (e.g. "Pricing", "About Us", "Contact")
+- finalUrl: the actual URL
+
+[{
+  "headlines": ["Headline 1 (max 30)", "Headline 2 (max 30)", "Headline 3 (max 30)"],
+  "descriptions": ["Description line 1 (max 90 chars, compelling)", "Description line 2 (max 90 chars, with CTA)"],
+  "displayUrl": "${domain}",
+  "siteLinks": ["Pricing", "About Us", "Contact"],
+  "finalUrl": "${business.url}"
+}]`
+
+  const response = await callClaude(prompt, 2000)
+
+  try {
+    const match = response.match(/\[[\s\S]*\]/)
+    if (match) {
+      const parsed = JSON.parse(match[0])
+      return parsed.map((ad: any) => ({
+        ...ad,
+        id: crypto.randomUUID(),
+        headlines: (ad.headlines || []).map((h: string) => h.slice(0, 30)),
+        descriptions: (ad.descriptions || []).map((d: string) => d.slice(0, 90)),
+      }))
+    }
+  } catch {}
+
+  // Fallback Google ads
+  return [
+    {
+      id: crypto.randomUUID(),
+      headlines: [
+        `${business.name.slice(0, 30)}`,
+        `Top ${business.industry.slice(0, 22)}`,
+        'Get a Free Quote Today',
+      ],
+      descriptions: [
+        `Discover ${business.name} — trusted ${business.industry.toLowerCase()} services. Quality you can count on.`,
+        `Visit us today and see why customers love ${business.name}. Book online or call now.`,
+      ],
+      displayUrl: domain,
+      siteLinks: ['Services', 'About Us', 'Contact'],
+      finalUrl: business.url,
+    },
+    {
+      id: crypto.randomUUID(),
+      headlines: [
+        `Best ${business.industry.slice(0, 22)}`,
+        `${business.location.slice(0, 24)} Local`,
+        'Book Online Now',
+      ],
+      descriptions: [
+        `Looking for ${business.industry.toLowerCase()}? ${business.name} delivers results. Trusted by locals.`,
+        `${business.strengths[0] || 'Professional service'} — see what sets us apart. Get started today.`,
+      ],
+      displayUrl: domain,
+      siteLinks: ['Reviews', 'Pricing', 'FAQ'],
+      finalUrl: business.url,
+    },
+    {
+      id: crypto.randomUUID(),
+      headlines: [
+        'Don\'t Settle for Less',
+        `Try ${business.name.slice(0, 22)}`,
+        'See Our Results',
+      ],
+      descriptions: [
+        `Stop searching. ${business.name} is the ${business.industry.toLowerCase()} solution that actually works.`,
+        `Join hundreds of happy customers. Professional, reliable, and ready to help you today.`,
+      ],
+      displayUrl: domain,
+      siteLinks: ['Testimonials', 'Get Started', 'Learn More'],
+      finalUrl: business.url,
+    },
+  ]
+}
+
 // ─── Campaign Assembly ─────────────────────────────────────────────────────
 
 function assembleCampaign(business: BusinessProfile, audiences: AudiencePersona[], creatives: AdCreative[]): CampaignConfig {
@@ -271,61 +367,66 @@ function assembleCampaign(business: BusinessProfile, audiences: AudiencePersona[
   }
 }
 
-// ─── Main Build Pipeline ───────────────────────────────────────────────────
+// ─── Thinking text configs ─────────────────────────────────────────────────
 
-export async function buildCampaign(url: string, onUpdate: UpdateCallback): Promise<void> {
-  const stages: StageId[] = ['scrape', 'analyse', 'audience', 'strategy', 'copy', 'creatives', 'campaign', 'complete']
-  
-  const thinkingTexts: Record<StageId, string[]> = {
-    scrape: [
-      'Connecting to website...',
-      'Downloading page content...',
-      'Extracting metadata and text...',
-      'Reading page structure...',
-    ],
-    analyse: [
-      'Understanding the business model...',
-      'Identifying industry and market position...',
-      'Evaluating online presence...',
-      'Mapping strengths and opportunities...',
-      'Determining brand tone and personality...',
-    ],
-    audience: [
-      'Researching target demographics...',
-      'Building audience personas...',
-      'Mapping interests and behaviours...',
-      'Identifying pain points and motivations...',
-      'Selecting Facebook targeting parameters...',
-    ],
-    strategy: [
-      'Choosing campaign objective...',
-      'Calculating optimal budget allocation...',
-      'Setting performance benchmarks...',
-      'Planning 14-day test structure...',
-    ],
-    copy: [
-      'Crafting headline variants...',
-      'Writing persuasive ad copy...',
-      'Tailoring tone to brand voice...',
-      'Testing different creative angles...',
-      'Optimising for engagement...',
-    ],
-    creatives: [
-      'Generating visual concepts...',
-      'Designing ad creative #1...',
-      'Designing ad creative #2...',
-      'Designing ad creative #3...',
-      'Applying brand colours and style...',
-    ],
-    campaign: [
-      'Assembling campaign structure...',
-      'Configuring targeting rules...',
-      'Setting budget and schedule...',
-      'Final quality check...',
-    ],
-    complete: ['Done!'],
-  }
+const thinkingTexts: Record<StageId, string[]> = {
+  scrape: [
+    'Connecting to website...',
+    'Downloading page content...',
+    'Extracting metadata and text...',
+    'Reading page structure...',
+  ],
+  analyse: [
+    'Understanding the business model...',
+    'Identifying industry and market position...',
+    'Evaluating online presence...',
+    'Mapping strengths and opportunities...',
+    'Determining brand tone and personality...',
+  ],
+  audience: [
+    'Researching target demographics...',
+    'Building audience personas...',
+    'Mapping interests and behaviours...',
+    'Identifying pain points and motivations...',
+    'Selecting Facebook targeting parameters...',
+  ],
+  strategy: [
+    'Choosing campaign objective...',
+    'Calculating optimal budget allocation...',
+    'Setting performance benchmarks...',
+    'Planning 14-day test structure...',
+  ],
+  copy: [
+    'Crafting headline variants...',
+    'Writing persuasive ad copy...',
+    'Tailoring tone to brand voice...',
+    'Testing different creative angles...',
+    'Optimising for engagement...',
+    'Writing Google Search ad headlines...',
+    'Crafting Google ad descriptions...',
+  ],
+  creatives: [
+    'Generating visual concepts...',
+    'Designing ad creative #1...',
+    'Designing ad creative #2...',
+    'Designing ad creative #3...',
+    'Applying brand colours and style...',
+  ],
+  campaign: [
+    'Assembling campaign structure...',
+    'Configuring targeting rules...',
+    'Setting budget and schedule...',
+    'Final quality check...',
+  ],
+  complete: ['Done!'],
+}
 
+// ─── Phase 1: Strategy (scrape → analyse → audience → strategy) ────────────
+
+export async function buildStrategy(
+  url: string,
+  onUpdate: UpdateCallback,
+): Promise<{ business: BusinessProfile; audiences: AudiencePersona[] }> {
   // ── Stage 1: Scrape ──
   onUpdate({ stage: { id: 'scrape', changes: { status: 'running', startedAt: Date.now() } } })
   onUpdate({ thinking: { type: 'system', text: `→ Connecting to ${url}...` } })
@@ -346,7 +447,6 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
   onUpdate({ thinking: { type: 'data', text: `Extracted ${scraped.text.length} chars of page content` } })
   await delay(150)
   
-  // Show snippets of what was scraped
   const words = scraped.text.split(' ').filter(w => w.length > 3)
   const snippetLength = Math.min(words.length, 15)
   if (snippetLength > 5) {
@@ -461,13 +561,26 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
     data: { objective: 'Lead Generation', duration: '14 days' },
   }}})
 
+  // Signal the approval gate
+  onUpdate({ awaitApproval: true })
+
+  return { business, audiences }
+}
+
+// ─── Phase 2: Execution (copy → creatives → campaign → complete) ───────────
+
+export async function executeCampaign(
+  business: BusinessProfile,
+  audiences: AudiencePersona[],
+  onUpdate: UpdateCallback,
+): Promise<void> {
   await delay(300)
 
   // ── Stage 5: Copy ──
   onUpdate({ stage: { id: 'copy', changes: { status: 'running', startedAt: Date.now() } } })
   onUpdate({ thinking: { type: 'system', text: '→ Writing ad copy with Claude...' } })
   
-  for (const text of thinkingTexts.copy) {
+  for (const text of thinkingTexts.copy.slice(0, 5)) {
     onUpdate({ stage: { id: 'copy', changes: { thinkingText: text } } })
     await delay(randomBetween(500, 1000))
   }
@@ -478,10 +591,9 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
     const c = creatives[i]
     onUpdate({ thinking: { type: 'decision', text: `Ad ${i + 1} — Angle: "${c.angle}"` } })
     await delay(200)
-    // Simulate typing the headline
-    const words = c.headline.split(' ')
+    const copyWords = c.headline.split(' ')
     let typed = ''
-    for (const word of words) {
+    for (const word of copyWords) {
       typed += (typed ? ' ' : '') + word
       onUpdate({ thinking: { type: 'data', text: `    Headline: ${typed}█` } })
       await delay(randomBetween(60, 150))
@@ -491,14 +603,36 @@ export async function buildCampaign(url: string, onUpdate: UpdateCallback): Prom
     onUpdate({ thinking: { type: 'data', text: `    CTA: [${c.cta}]` } })
     await delay(150)
   }
-  onUpdate({ thinking: { type: 'highlight', text: `✓ ${creatives.length} ad variants written` } })
+  onUpdate({ thinking: { type: 'highlight', text: `✓ ${creatives.length} Facebook ad variants written` } })
   
   onUpdate({ creatives })
+
+  // Now generate Google ads
+  onUpdate({ thinking: { type: 'system', text: '→ Writing Google Search ad copy...' } })
+  for (const text of thinkingTexts.copy.slice(5)) {
+    onUpdate({ stage: { id: 'copy', changes: { thinkingText: text } } })
+    await delay(randomBetween(400, 800))
+  }
+
+  const googleAds = await generateGoogleAds(business, audiences)
+
+  for (let i = 0; i < googleAds.length; i++) {
+    const ad = googleAds[i]
+    onUpdate({ thinking: { type: 'decision', text: `Google Ad ${i + 1} — "${ad.headlines[0]}"` } })
+    await delay(200)
+    onUpdate({ thinking: { type: 'data', text: `    Headlines: ${ad.headlines.join(' | ')}` } })
+    await delay(100)
+    onUpdate({ thinking: { type: 'data', text: `    URL: ${ad.displayUrl}` } })
+    await delay(100)
+  }
+  onUpdate({ thinking: { type: 'highlight', text: `✓ ${googleAds.length} Google Search ads written` } })
+
+  onUpdate({ googleAds })
   
   onUpdate({ stage: { id: 'copy', changes: { 
     status: 'completed', 
     completedAt: Date.now(),
-    data: { variants: creatives.length, angles: creatives.map(c => c.angle) },
+    data: { variants: creatives.length, googleAds: googleAds.length, angles: creatives.map(c => c.angle) },
   }}})
 
   await delay(300)

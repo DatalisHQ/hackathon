@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
-import type { Stage, BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from './types'
+import type { Stage, BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from './types'
 import { URLInput } from './components/URLInput'
 import { BuildProgress } from './components/BuildProgress'
 import { ResultsPanel } from './components/ResultsPanel'
 import { ThinkingStream } from './components/ThinkingStream'
 import type { ThinkingLine } from './components/ThinkingStream'
-import { buildCampaign } from './lib/engine'
+import { buildStrategy, executeCampaign } from './lib/engine'
 import { playTick, playSuccess, playStageComplete } from './lib/sounds'
 import { fireConfetti } from './lib/confetti'
 
@@ -28,12 +28,15 @@ export default function App() {
   const [business, setBusiness] = useState<BusinessProfile>()
   const [audiences, setAudiences] = useState<AudiencePersona[]>()
   const [creatives, setCreatives] = useState<AdCreative[]>()
+  const [googleAds, setGoogleAds] = useState<GoogleAd[]>()
   const [campaign, setCampaign] = useState<CampaignConfig>()
   const [thinkingLines, setThinkingLines] = useState<ThinkingLine[]>([])
   const [url, setUrl] = useState('')
   const [elapsed, setElapsed] = useState(0)
+  const [awaitingApproval, setAwaitingApproval] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const startTimeRef = useRef<number>(0)
+  const strategyDataRef = useRef<{ business: BusinessProfile; audiences: AudiencePersona[] } | null>(null)
 
   useEffect(() => {
     if (isBuilding) {
@@ -41,62 +44,100 @@ export default function App() {
       timerRef.current = setInterval(() => {
         setElapsed(Date.now() - startTimeRef.current)
       }, 100)
-    } else {
+    } else if (!awaitingApproval) {
       clearInterval(timerRef.current)
     }
     return () => clearInterval(timerRef.current)
-  }, [isBuilding])
+  }, [isBuilding, awaitingApproval])
+
+  const handleUpdate = useCallback((update: any) => {
+    if (update.stage) {
+      setStages(prev => prev.map(s =>
+        s.id === update.stage!.id ? { ...s, ...update.stage!.changes } : s
+      ))
+    }
+    if (update.thinking) {
+      setThinkingLines(prev => [...prev, {
+        id: crypto.randomUUID(),
+        type: update.thinking!.type,
+        text: update.thinking!.text,
+        timestamp: Date.now(),
+      }])
+      if (update.thinking.type === 'highlight') {
+        playStageComplete()
+      } else if (update.thinking.type === 'decision' || update.thinking.type === 'insight') {
+        playTick()
+      }
+    }
+    if (update.business) setBusiness(update.business)
+    if (update.audiences) setAudiences(update.audiences)
+    if (update.creatives) setCreatives(update.creatives)
+    if (update.googleAds) setGoogleAds(update.googleAds)
+    if (update.campaign) {
+      setCampaign(update.campaign)
+      setIsComplete(true)
+      playSuccess()
+      setTimeout(() => fireConfetti(), 300)
+    }
+    if (update.awaitApproval) {
+      setAwaitingApproval(true)
+      setIsBuilding(false)
+    }
+  }, [])
 
   const handleSubmit = useCallback(async (inputUrl: string) => {
     setUrl(inputUrl)
     setIsBuilding(true)
     setIsComplete(false)
+    setAwaitingApproval(false)
     setStages([...INITIAL_STAGES])
     setBusiness(undefined)
     setAudiences(undefined)
     setCreatives(undefined)
+    setGoogleAds(undefined)
     setCampaign(undefined)
     setThinkingLines([])
+    strategyDataRef.current = null
 
-    await buildCampaign(inputUrl, (update) => {
-      if (update.stage) {
-        setStages(prev => prev.map(s =>
-          s.id === update.stage!.id ? { ...s, ...update.stage!.changes } : s
-        ))
-      }
-      if (update.thinking) {
-        setThinkingLines(prev => [...prev, {
-          id: crypto.randomUUID(),
-          type: update.thinking!.type,
-          text: update.thinking!.text,
-          timestamp: Date.now(),
-        }])
-        // Sound effects
-        if (update.thinking.type === 'highlight') {
-          playStageComplete()
-        } else if (update.thinking.type === 'decision' || update.thinking.type === 'insight') {
-          playTick()
-        }
-      }
-      if (update.business) setBusiness(update.business)
-      if (update.audiences) setAudiences(update.audiences)
-      if (update.creatives) setCreatives(update.creatives)
-      if (update.campaign) {
-        setCampaign(update.campaign)
-        setIsComplete(true)
-        playSuccess()
-        setTimeout(() => fireConfetti(), 300)
-      }
-    })
+    const result = await buildStrategy(inputUrl, handleUpdate)
+    strategyDataRef.current = result
+  }, [handleUpdate])
+
+  const handleApprove = useCallback(async () => {
+    if (!strategyDataRef.current) return
+    setAwaitingApproval(false)
+    setIsBuilding(true)
+
+    await executeCampaign(
+      strategyDataRef.current.business,
+      strategyDataRef.current.audiences,
+      handleUpdate,
+    )
 
     setIsBuilding(false)
-  }, [])
+  }, [handleUpdate])
 
   const handleCreativeEdit = useCallback((id: string, field: string, value: string) => {
     setCreatives(prev => prev?.map(c => c.id === id ? { ...c, [field]: value } : c))
   }, [])
 
-  const showBuilder = isBuilding || isComplete
+  const handleReset = useCallback(() => {
+    setIsBuilding(false)
+    setIsComplete(false)
+    setAwaitingApproval(false)
+    setStages([...INITIAL_STAGES])
+    setBusiness(undefined)
+    setAudiences(undefined)
+    setCreatives(undefined)
+    setGoogleAds(undefined)
+    setCampaign(undefined)
+    setThinkingLines([])
+    setUrl('')
+    setElapsed(0)
+    strategyDataRef.current = null
+  }, [])
+
+  const showBuilder = isBuilding || isComplete || awaitingApproval
 
   return (
     <div className="h-screen flex flex-col bg-bg overflow-hidden">
@@ -117,6 +158,12 @@ export default function App() {
                 Building... {(elapsed / 1000).toFixed(1)}s
               </div>
             )}
+            {awaitingApproval && !isBuilding && !isComplete && (
+              <div className="flex items-center gap-2 text-xs text-warning">
+                <span className="w-1.5 h-1.5 rounded-full bg-warning pulse-dot" />
+                Awaiting approval
+              </div>
+            )}
             {isComplete && (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-xs text-success">
@@ -124,7 +171,7 @@ export default function App() {
                   Complete — {(elapsed / 1000).toFixed(1)}s
                 </div>
                 <button
-                  onClick={() => { setIsBuilding(false); setIsComplete(false); setStages([...INITIAL_STAGES]); setBusiness(undefined); setAudiences(undefined); setCreatives(undefined); setCampaign(undefined); setThinkingLines([]); setUrl(''); setElapsed(0); }}
+                  onClick={handleReset}
                   className="text-xs text-text-muted hover:text-text px-2 py-1 rounded border border-border hover:border-border-bright transition cursor-pointer"
                 >
                   ← New URL
@@ -161,8 +208,11 @@ export default function App() {
               business={business}
               audiences={audiences}
               creatives={creatives}
+              googleAds={googleAds}
               campaign={campaign}
               onCreativeEdit={handleCreativeEdit}
+              awaitingApproval={awaitingApproval}
+              onApprove={handleApprove}
             />
           </div>
         </div>

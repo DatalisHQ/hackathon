@@ -55,6 +55,15 @@ export interface AdCreative {
   angle: string
 }
 
+export interface GoogleAd {
+  id: string
+  headlines: string[]  // up to 3, max 30 chars
+  descriptions: string[]  // up to 2, max 90 chars
+  displayUrl: string
+  siteLinks: string[]
+  finalUrl: string
+}
+
 export interface CampaignConfig {
   objective: string
   dailyBudget: number
@@ -74,6 +83,7 @@ export interface CampaignBuild {
   business?: BusinessProfile
   audiences?: AudiencePersona[]
   creatives?: AdCreative[]
+  googleAds?: GoogleAd[]
   campaign?: CampaignConfig
   error?: string
   startedAt?: number
