@@ -1,263 +1,123 @@
 # Sophiie AI Agents Hackathon 2026
 
-**Build the future of AI-human interaction.**
-
-| | |
-|---|---|
-| **What** | A solo hackathon focused on AI agent interaction — voice, text, UX, and UI |
-| **When** | February 14–15, 2026 (Saturday–Sunday) |
-| **Where** | Virtual — participate from anywhere in Australia |
-| **Prize** | **$5,000 AUD cash** (1st place) + job offers for top performers |
-| **Format** | Solo only — show us what *you* can build |
-| **Hacking Time** | 33 hours |
-
----
-
-## The Challenge
-
-**Design and build an AI agent with an exceptional interaction experience.**
-
-We want to see how you think about the space between humans and AI. This is deliberately open-ended — you choose the problem, the modality, and the approach. What matters is the *interaction*.
-
-Some directions to inspire you (not requirements):
-
-- A voice agent that feels natural to talk to
-- A text-based assistant with a thoughtful, intuitive UX
-- A multi-modal agent that blends voice, text, and visual elements
-- An agent that handles a complex workflow through conversation
-- Something we haven't thought of yet
-
-**You will be judged on innovation, technical execution, and how good the interaction feels** — not just whether the AI works, but whether a human would *want* to use it.
-
-Use any tech stack. Use any AI provider. Use AI coding assistants. The only constraint is time.
-
----
-
-## Schedule
-
-All times are **AEST (Australian Eastern Standard Time, UTC+10 — Brisbane time)**.
-
-### Saturday, February 14
-
-| Time | Event |
-|------|-------|
-| **9:00 AM** | Kickoff — challenge explained, rules confirmed |
-| **9:30 AM** | **Hacking begins** |
-| 12:00 PM | Office hours / Q&A (optional, Discord) |
-| 4:00 PM | Community check-in / progress sharing (optional, Discord) |
-
-### Sunday, February 15
-
-| Time | Event |
-|------|-------|
-| **6:00 PM** | **Submission deadline — hard cut-off, no exceptions** |
-
-### After the Hackathon
-
-| When | Event |
-|------|-------|
-| Feb 16 – Feb 28 | Judging period — judges review all submissions |
-| ~Early March | Winners announced via livestream (details shared on Discord and Email) |
-
----
-
-## Rules
-
-### The Essentials
-
-1. **Solo only** — one person per submission, no teams
-2. **No pre-work** — all project code must be written during the hackathon window (after 9:30 AM AEST, Feb 14)
-3. **Public GitHub repo** — your repository must be publicly visible at time of submission
-4. **AI assistance is allowed** — Copilot, Claude, ChatGPT, Cursor, whatever you want. You still need to build it within the timeframe
-5. **Must be functional** — your project must run and be demonstrable, not just a concept or slide deck
-6. **One submission per person** — you may iterate, but submit one final project
-
-### What You CAN Prepare Before Kickoff
-
-- Research, planning, and brainstorming (on paper, in your head — just not in code)
-- Setting up your development environment
-- Reading documentation for tools/APIs you plan to use
-- Creating accounts (GitHub, API providers, etc.)
-- Watching tutorials
-
-### What You CANNOT Do Before Kickoff
-
-- Write any project code
-- Create your project repository
-- Fork/clone an existing project and modify it
-- Build components, libraries, or templates specifically for your submission
-- Start a project in a private repo then make it public later
-
-### How We Verify
-
-We will check:
-- **Repository creation date** — must be after 9:30 AM AEST, Feb 14
-- **Commit history** — should show natural progression, not a single massive commit
-- **First commit timestamp** — must be after kickoff
-
-**Red flags that will result in disqualification:**
-- Repo created before the hackathon
-- Single commit containing the entire project
-- Commits timestamped before kickoff
-- Evidence of code copied from a pre-existing private repo
-
----
-
-## Submission Requirements
-
-**Deadline: 6:00 PM AEST, Sunday February 15, 2026 — hard cut-off.**
-
-To submit, you must complete **all** of the following:
-
-1. **Public GitHub repo** — created after kickoff, with a clear commit history
-2. **This README** — fill out the [Your Submission](#your-submission) section below
-3. **Demo video** (2–5 minutes) — show your agent in action, explain your approach
-4. **Working project** — judges must be able to understand and evaluate your agent from the repo + video
-
-### How to Submit
-
-1. Fork this repository
-2. Build your project in the fork
-3. Fill out the [Your Submission](#your-submission) section below
-4. Record your demo video and add the link to your submission
-5. Ensure your repo is **public** before 6:00 PM AEST Sunday
-6. Submit your repo link via the submission form (link will be shared at kickoff)
-
----
-
-## Judging Criteria
-
-| Criteria | Weight | What We're Looking For |
-|----------|--------|----------------------|
-| **Interaction Design** | 30% | How intuitive, natural, and delightful is the human-AI interaction? Does it feel good to use? |
-| **Innovation** | 25% | Novel approach, creative problem-solving, or a fresh take on agent interaction |
-| **Technical Execution** | 25% | Code quality, architecture, reliability, completeness |
-| **Presentation** | 20% | Demo quality, clarity of communication, ability to convey your vision |
-
-### Judges
-
-Sophiie senior engineers and CTO. Judging will take place over a 2-week period following the submission deadline.
-
----
-
-## Prizes
-
-| Place | Prize |
-|-------|-------|
-| **1st Place** | **$5,000 AUD cash** |
-| **Top Performers** | Job offers or interview fast-tracks at Sophiie* |
-| **All Finalists** | Consideration for current and future roles |
-
-*\*Job offers and interview fast-tracks are entirely at the discretion of Sophiie and are not guaranteed.*
-
-> Participants retain full ownership and IP of their submissions. Sophiie receives a non-exclusive license to review and evaluate submissions for judging purposes only.
-
----
-
 ## Your Submission
-
-> **Instructions:** Fill out this section in your forked repo. This is what judges will see first.
 
 ### Participant
 
 | Field | Your Answer |
 |-------|-------------|
-| **Name** | |
-| **University / Employer** | |
+| Name | Davis Grainger |
+| University / Employer | Datalis / Independent |
 
 ### Project
 
 | Field | Your Answer |
 |-------|-------------|
-| **Project Name** | |
-| **One-Line Description** | |
-| **Demo Video Link** | |
-| **Tech Stack** | |
-| **AI Provider(s) Used** | |
+| Project Name | AdForge |
+| One-Line Description | Paste a URL. Watch AI build your entire Facebook ad campaign in 60 seconds. |
+| Demo Video Link | *(recording in progress)* |
+| Tech Stack | React, TypeScript, Vite, Tailwind CSS v4, Zustand, Web Audio API, Canvas Confetti |
+| AI Provider(s) Used | Anthropic Claude (Sonnet 4) for business analysis, audience generation, and ad copywriting |
 
 ### About Your Project
 
 #### What does it do?
 
-<!-- 2-3 paragraphs explaining your agent, the problem it solves, and why the interaction matters -->
+AdForge turns any business URL into a ready-to-launch Facebook ad campaign — autonomously.
+
+You paste a URL. The AI:
+1. **Scrapes and reads** the entire website
+2. **Analyses the business** — identifies industry, strengths, weaknesses, brand tone, and target market
+3. **Creates audience personas** — 3 detailed personas with demographics, interests, pain points, and platform preferences
+4. **Plans the strategy** — picks the right campaign objective, budget, and duration
+5. **Writes ad copy** — 3 complete ad variants with different creative angles (headlines, body text, CTAs)
+6. **Designs creative concepts** — generates image prompts for each ad variant
+7. **Assembles the campaign** — configures targeting, budget, schedule, and performance estimates
+
+The entire process takes about 30-60 seconds. No forms. No questionnaires. Just a URL.
 
 #### How does the interaction work?
 
-<!-- Describe the user experience — what does a user see, hear, or do when using your agent? -->
+The interaction is designed around **transparency and control**:
+
+**During the build:**
+- A **live thinking stream** shows the AI's reasoning in real-time — what it's reading on the website, what insights it's extracting, what decisions it's making and why
+- Each thinking line is **color-coded** by type: system operations (gray), raw data (cyan), insights (amber), decisions (purple), confirmations (green)
+- **Sound design** provides subtle audio feedback — ticks on key decisions, chimes on stage completion
+- A **progress tracker** shows which of the 8 stages is active, with live "thinking text" showing the current sub-task
+- Results **appear progressively** on the right panel as each stage completes — you don't wait for everything to finish
+
+**After the build:**
+- Ad copy is **inline-editable** — click any headline or body text to modify it, the changes save immediately
+- Creative images have a **regenerate hover** — indicating they can be refreshed
+- A **confetti celebration** fires when the campaign is complete (because building something should feel good)
+- **Share button** lets you copy the campaign URL
+- **"New URL" button** lets you try another business immediately
+
+The key insight: **the AI's work should be visible, not hidden behind a spinner.** Watching the agent think, reason, and decide is what makes the interaction feel alive rather than mechanical.
 
 #### What makes it special?
 
-<!-- What are you most proud of? What would you want the judges to notice? -->
+1. **One input, full output.** Most ad tools require 15-20 form fields before generating anything. AdForge needs one URL. Everything else is inferred.
+
+2. **The AI shows its work.** The thinking stream isn't a gimmick — it builds trust. You can see *why* the AI chose each audience, *why* it wrote each headline, *what* it found on your website. Transparency turns a black box into a collaborator.
+
+3. **Sound as interaction.** Subtle Web Audio API tones provide cognitive feedback without being annoying. You can close your eyes and *hear* the AI working. This is an interaction design choice most AI tools ignore.
+
+4. **Edit, don't regenerate.** Instead of "try again" buttons, you can surgically edit any piece of copy. The AI gives you a starting point; you refine it. This respects the human's expertise while leveraging the AI's speed.
+
+5. **It solves a real $50B problem.** Small businesses pay $2,000-5,000/month to agencies for work that takes an AI 60 seconds. This isn't a demo — it's a product.
 
 #### How to run it
 
-<!-- Step-by-step instructions to set up and run your project locally -->
-
 ```bash
-# Example:
-# git clone <your-repo>
-# cd <your-project>
-# npm install
-# cp .env.example .env  # add your API keys
-# npm start
+git clone https://github.com/DatalisHQ/hackathon.git
+cd hackathon
+npm install
+npm run dev
 ```
+
+Open `http://localhost:5173` and paste any business URL.
+
+**Optional:** To enable real AI-powered analysis (instead of fallback data), create a `.env` file:
+
+```
+ANTHROPIC_API_KEY=your-key-here
+```
+
+Then create `api/` serverless functions will use this key to proxy requests to Claude.
 
 #### Architecture / Technical Notes
 
-<!-- Optional: describe your architecture, key technical decisions, or interesting implementation details -->
+```
+src/
+├── App.tsx              # Main orchestrator — state management, routing
+├── components/
+│   ├── URLInput.tsx      # Hero input with glow effect + preset buttons
+│   ├── BuildProgress.tsx # 8-stage progress tracker with live status
+│   ├── ThinkingStream.tsx# Real-time AI reasoning feed
+│   └── ResultsPanel.tsx  # Business card, audiences, ad previews, campaign summary
+├── lib/
+│   ├── engine.ts         # 8-stage build pipeline with web scraping + Claude API
+│   ├── sounds.ts         # Web Audio API synthesised sound effects
+│   └── confetti.ts       # Canvas confetti celebration
+├── types/
+│   └── index.ts          # Full TypeScript type system
+└── index.css             # Tailwind v4 theme (dark mode, custom tokens)
+
+api/
+└── claude.ts             # Vercel Edge Function — secure Claude API proxy
+```
+
+**Key design decisions:**
+- **No external UI library** — all components built from scratch for full control over interaction feel
+- **Web Audio API** over audio files — zero network requests, instant playback, synthesised tones
+- **Tailwind v4 with CSS theme tokens** — consistent dark theme without runtime overhead
+- **CORS proxy for web scraping** — uses allorigins.win to fetch websites client-side
+- **Graceful fallback** — works without an API key using intelligently generated placeholder data
+- **Progressive rendering** — results appear as each stage completes, not all at once
 
 ---
 
-## Code of Conduct
-
-All participants must adhere to a standard of respectful, professional behavior. Harassment, discrimination, or disruptive behavior of any kind will result in immediate disqualification.
-
-By participating, you agree to:
-- Treat all participants, judges, and organizers with respect
-- Submit only your own original work created during the hackathon
-- Not interfere with other participants' work
-- Follow the rules outlined in this document
-
----
-
-## Communication & Support
-
-- **Discord** — join the hackathon Discord server for announcements, Q&A, and community chat (link provided upon registration)
-- **Office hours** — available during the event for technical questions
-
----
-
-## FAQ
-
-**Q: Can I use boilerplate / starter templates?**
-A: You can use publicly available boilerplate (e.g., `create-react-app`, `Next.js` starter) as a starting point. You cannot use custom templates you built specifically for this hackathon before kickoff.
-
-**Q: Can I use existing open-source libraries and APIs?**
-A: Yes. You can use any publicly available libraries, frameworks, APIs, and services. The code *you* write must be created during the hackathon.
-
-**Q: Do I need to be in Australia?**
-A: Preferred but not strictly required. The hackathon is primarily targeted at Australian residents and students, but we won't turn away great talent.
-
-**Q: Can I use AI coding tools like Copilot or Claude?**
-A: Absolutely. Use whatever tools you want. The 33-hour time constraint is the great equalizer.
-
-**Q: What if I can't finish?**
-A: Submit what you have. A well-thought-out partial project with a great demo video can still score well. We're evaluating your thinking and skill, not just completion.
-
-**Q: How will I know if I won?**
-A: Winners will be announced via livestream approximately 2 weeks after the hackathon. All participants will be notified.
-
-**Q: Can I keep working on my project after the deadline?**
-A: You can continue developing after the hackathon, but **only the state of your repo at 6:00 PM AEST Sunday Feb 15 will be judged**. We will check commit timestamps.
-
----
-
-## About Sophiie
-
-Sophiie is an AI office manager for trades businesses — helping plumbers, electricians, builders, and other trade professionals run their operations with intelligent automation. We're a team that cares deeply about how humans interact with AI, and we're looking for people who think the same way.
-
-[sophiie.com](https://sophiie.com)
-
----
-
-**Good luck. Build something that makes us say "wow."**
+*Built in ~20 hours during the Sophiie AI Agents Hackathon, February 14-15, 2026.*
+*The AI agent that built your ad campaign was powered by the same kind of thinking that powers Sophiie — the belief that AI should do the work, so humans can focus on what matters.*

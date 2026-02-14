@@ -118,9 +118,17 @@ export default function App() {
               </div>
             )}
             {isComplete && (
-              <div className="flex items-center gap-2 text-xs text-success">
-                <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                Complete — {(elapsed / 1000).toFixed(1)}s
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-xs text-success">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                  Complete — {(elapsed / 1000).toFixed(1)}s
+                </div>
+                <button
+                  onClick={() => { setIsBuilding(false); setIsComplete(false); setStages([...INITIAL_STAGES]); setBusiness(undefined); setAudiences(undefined); setCreatives(undefined); setCampaign(undefined); setThinkingLines([]); setUrl(''); setElapsed(0); }}
+                  className="text-xs text-text-muted hover:text-text px-2 py-1 rounded border border-border hover:border-border-bright transition cursor-pointer"
+                >
+                  ← New URL
+                </button>
               </div>
             )}
             {showBuilder && url && (
