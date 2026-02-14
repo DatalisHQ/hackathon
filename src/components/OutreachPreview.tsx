@@ -1,4 +1,4 @@
-import { Mail, Clock, CheckCircle2, Send, AlertCircle } from 'lucide-react'
+import { Mail, Clock, CheckCircle2, Send } from 'lucide-react'
 import type { OutreachMessage, Lead } from '../types'
 
 interface Props {

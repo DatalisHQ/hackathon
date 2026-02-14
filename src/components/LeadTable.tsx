@@ -1,4 +1,4 @@
-import { ExternalLink, TrendingUp, Mail } from 'lucide-react'
+import { ExternalLink, TrendingUp } from 'lucide-react'
 import type { Lead } from '../types'
 
 interface Props {

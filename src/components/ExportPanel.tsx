@@ -112,8 +112,6 @@ function downloadFile(content: string, filename: string, type: string) {
 }
 
 export function ExportPanel({ mission }: Props) {
-  const isComplete = mission.status === 'completed'
-
   const exports = [
     {
       icon: <FileSpreadsheet className="w-5 h-5" />,

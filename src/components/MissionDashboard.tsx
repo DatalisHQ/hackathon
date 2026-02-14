@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Play, Pause, RotateCcw, Download, Activity, Users, Mail, ScrollText, Shield, Zap, Loader2 } from 'lucide-react'
+import { Play, Pause, Download, Activity, Users, Mail, ScrollText, Shield, Zap, Loader2 } from 'lucide-react'
 import { useMissionStore } from '../store/mission'
 import { RunFeed } from './RunFeed'
 import { LeadTable } from './LeadTable'
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export function MissionDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('feed')
   const [selectedLeadId, setSelectedLeadId] = useState<string>()
-  const { mission, isRunning, startMission, pauseMission, resumeMission, approveStep, rejectStep } = useMissionStore()
+  const { mission, startMission, pauseMission, resumeMission, approveStep, rejectStep } = useMissionStore()
 
   if (!mission) return null
 

@@ -1,4 +1,4 @@
-import { Search, Globe, BarChart3, PenTool, CheckCircle2, XCircle, Clock, AlertTriangle, Send, FileDown, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { Search, Globe, BarChart3, PenTool, CheckCircle2, XCircle, AlertTriangle, Send, FileDown, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react'
 import type { RunStep, StepType, StepStatus } from '../types'
 
 interface Props {
@@ -50,7 +50,7 @@ export function RunFeed({ steps, onApprove, onReject }: Props) {
       </h2>
       
       <div className="space-y-2">
-        {steps.map((step, i) => {
+        {steps.map((step) => {
           const style = STATUS_STYLES[step.status]
           const isApproval = step.type === 'approval' && step.status === 'awaiting_approval'
           

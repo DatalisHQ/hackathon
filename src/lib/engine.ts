@@ -222,7 +222,7 @@ Respond with ONLY JSON:
 // ─── Store interface ───────────────────────────────────────────────────────
 
 type StoreActions = {
-  mission: { config: MissionConfig; leads: Lead[]; messages: OutreachMessage[] } | null
+  mission: { config: MissionConfig; leads: Lead[]; messages: OutreachMessage[]; steps: RunStep[] } | null
   addStep: (step: RunStep) => void
   updateStep: (stepId: string, updates: Partial<RunStep>) => void
   addLead: (lead: Lead) => void
@@ -317,7 +317,6 @@ export async function runMission(store: StoreActions, signal: AbortSignal) {
     const chunkSize = 10
     for (let i = 0; i < rawLeads.length; i += chunkSize) {
       const chunk = rawLeads.slice(i, i + chunkSize)
-      const chunkLeads = currentLeads.slice(i, i + chunkSize)
       
       store.updateStep(scoreStep.id, { detail: `Scoring batch ${Math.floor(i / chunkSize) + 1}/${Math.ceil(rawLeads.length / chunkSize)} with Claude...` })
       

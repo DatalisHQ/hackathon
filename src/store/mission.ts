@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Mission, MissionConfig, MissionStatus, RunStep, Lead, OutreachMessage, AuditEntry, StepType, AutonomyLevel } from '../types'
+import type { Mission, MissionConfig, MissionStatus, RunStep, Lead, OutreachMessage, AuditEntry } from '../types'
 import { runMission } from '../lib/engine'
 
 interface MissionStore {
