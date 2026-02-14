@@ -1,4 +1,5 @@
-import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target } from 'lucide-react'
+import { useState } from 'react'
+import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target, Pencil, Check, RefreshCw, Share2, Copy, CheckCircle2 } from 'lucide-react'
 import type { BusinessProfile, AudiencePersona, AdCreative, CampaignConfig } from '../types'
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
   audiences?: AudiencePersona[]
   creatives?: AdCreative[]
   campaign?: CampaignConfig
+  onCreativeEdit?: (id: string, field: string, value: string) => void
 }
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -107,17 +109,58 @@ function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
   )
 }
 
-function AdPreviewCards({ creatives }: { creatives: AdCreative[] }) {
+function EditableText({ value, onSave, className = '', multiline = false }: { 
+  value: string; onSave: (v: string) => void; className?: string; multiline?: boolean 
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+
+  if (editing) {
+    return (
+      <div className="flex items-start gap-1">
+        {multiline ? (
+          <textarea
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            className="flex-1 bg-surface-3 border border-accent/30 rounded px-2 py-1 text-sm text-text focus:outline-none resize-none"
+            rows={3}
+            autoFocus
+          />
+        ) : (
+          <input
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            className="flex-1 bg-surface-3 border border-accent/30 rounded px-2 py-1 text-sm text-text focus:outline-none"
+            autoFocus
+            onKeyDown={e => { if (e.key === 'Enter') { onSave(draft); setEditing(false) } }}
+          />
+        )}
+        <button onClick={() => { onSave(draft); setEditing(false) }} className="p-1 text-success hover:bg-success/10 rounded cursor-pointer">
+          <Check className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`group relative cursor-pointer ${className}`} onClick={() => { setDraft(value); setEditing(true) }}>
+      {value}
+      <Pencil className="w-3 h-3 text-text-dim opacity-0 group-hover:opacity-100 absolute -right-4 top-0.5 transition" />
+    </div>
+  )
+}
+
+function AdPreviewCards({ creatives, onEdit }: { creatives: AdCreative[]; onEdit?: (id: string, field: string, value: string) => void }) {
   return (
     <Section>
       <div className="flex items-center gap-2 mb-3">
         <Zap className="w-4 h-4 text-pink-400" />
         <h3 className="text-sm font-medium text-text">Ad Creatives</h3>
+        <span className="text-[10px] text-text-dim ml-auto">Click any text to edit</span>
       </div>
       <div className="space-y-4">
         {creatives.map((ad, i) => (
           <div key={ad.id} className="bg-surface border border-border rounded-xl overflow-hidden slide-in" style={{ animationDelay: `${i * 200}ms` }}>
-            {/* Facebook ad preview */}
             <div className="p-4">
               {/* Ad header */}
               <div className="flex items-center gap-2 mb-3">
@@ -128,21 +171,34 @@ function AdPreviewCards({ creatives }: { creatives: AdCreative[] }) {
                 </div>
               </div>
               
-              {/* Primary text */}
-              <p className="text-sm text-text mb-3 leading-relaxed">{ad.primaryText}</p>
+              {/* Primary text — editable */}
+              <div className="text-sm text-text mb-3 leading-relaxed">
+                <EditableText 
+                  value={ad.primaryText} 
+                  onSave={v => onEdit?.(ad.id, 'primaryText', v)}
+                  multiline 
+                />
+              </div>
               
               {/* Image placeholder */}
-              <div className="bg-gradient-to-br from-surface-2 to-surface-3 rounded-lg h-40 flex items-center justify-center border border-border mb-3">
+              <div className="bg-gradient-to-br from-surface-2 to-surface-3 rounded-lg h-40 flex items-center justify-center border border-border mb-3 relative group">
                 <div className="text-center">
                   <div className="text-2xl mb-1">🎨</div>
                   <div className="text-[10px] text-text-dim max-w-[200px]">{ad.imagePrompt.slice(0, 60)}...</div>
                 </div>
+                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition rounded-lg">
+                  <span className="text-xs text-accent flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3" /> Regenerate
+                  </span>
+                </div>
               </div>
 
-              {/* Headline + CTA */}
+              {/* Headline + CTA — editable */}
               <div className="flex items-center justify-between bg-surface-2 rounded-lg p-3 border border-border">
                 <div>
-                  <div className="text-xs font-semibold text-text">{ad.headline}</div>
+                  <div className="text-xs font-semibold text-text">
+                    <EditableText value={ad.headline} onSave={v => onEdit?.(ad.id, 'headline', v)} />
+                  </div>
                   <div className="text-[10px] text-text-dim">yourbusiness.com</div>
                 </div>
                 <button className="px-3 py-1.5 bg-accent/20 text-accent text-xs font-medium rounded-md border border-accent/30">
@@ -180,14 +236,49 @@ function CampaignSummary({ campaign }: { campaign: CampaignConfig }) {
           <Stat icon={<TrendingUp className="w-4 h-4 text-pink-400" />} label="Est. CPL" value={campaign.estimatedCpl} />
         </div>
 
-        <div className="pt-4 border-t border-border">
+        <div className="pt-4 border-t border-border space-y-2">
           <button className="w-full py-3 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-bright hover:to-purple-400 text-white font-semibold rounded-xl transition cursor-pointer text-sm">
             🚀 Launch Campaign
           </button>
+          <ShareButton />
           <p className="text-[10px] text-text-dim text-center mt-2">Connect your Facebook account to go live</p>
         </div>
       </div>
     </Section>
+  )
+}
+
+function ShareButton() {
+  const [copied, setCopied] = useState(false)
+  
+  const handleShare = async () => {
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback
+    }
+  }
+
+  return (
+    <button
+      onClick={handleShare}
+      className="w-full py-2.5 flex items-center justify-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border rounded-xl transition cursor-pointer text-sm text-text-muted hover:text-text"
+    >
+      {copied ? (
+        <>
+          <CheckCircle2 className="w-4 h-4 text-success" />
+          <span className="text-success">Link copied!</span>
+        </>
+      ) : (
+        <>
+          <Share2 className="w-4 h-4" />
+          Share Campaign
+        </>
+      )}
+    </button>
   )
 }
 
@@ -203,7 +294,7 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
   )
 }
 
-export function ResultsPanel({ business, audiences, creatives, campaign }: Props) {
+export function ResultsPanel({ business, audiences, creatives, campaign, onCreativeEdit }: Props) {
   const hasAnything = business || audiences || creatives || campaign
 
   if (!hasAnything) {
@@ -218,7 +309,7 @@ export function ResultsPanel({ business, audiences, creatives, campaign }: Props
     <div className="space-y-6 p-1">
       {business && <BusinessCard business={business} />}
       {audiences && <AudienceCards audiences={audiences} />}
-      {creatives && <AdPreviewCards creatives={creatives} />}
+      {creatives && <AdPreviewCards creatives={creatives} onEdit={onCreativeEdit} />}
       {campaign && <CampaignSummary campaign={campaign} />}
     </div>
   )

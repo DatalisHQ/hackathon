@@ -7,6 +7,8 @@ import { ResultsPanel } from './components/ResultsPanel'
 import { ThinkingStream } from './components/ThinkingStream'
 import type { ThinkingLine } from './components/ThinkingStream'
 import { buildCampaign } from './lib/engine'
+import { playTick, playSuccess, playStageComplete } from './lib/sounds'
+import { fireConfetti } from './lib/confetti'
 
 const INITIAL_STAGES: Stage[] = [
   { id: 'scrape', label: 'Scan Website', description: 'Reading your website content', status: 'pending' },
@@ -69,6 +71,12 @@ export default function App() {
           text: update.thinking!.text,
           timestamp: Date.now(),
         }])
+        // Sound effects
+        if (update.thinking.type === 'highlight') {
+          playStageComplete()
+        } else if (update.thinking.type === 'decision' || update.thinking.type === 'insight') {
+          playTick()
+        }
       }
       if (update.business) setBusiness(update.business)
       if (update.audiences) setAudiences(update.audiences)
@@ -76,10 +84,16 @@ export default function App() {
       if (update.campaign) {
         setCampaign(update.campaign)
         setIsComplete(true)
+        playSuccess()
+        setTimeout(() => fireConfetti(), 300)
       }
     })
 
     setIsBuilding(false)
+  }, [])
+
+  const handleCreativeEdit = useCallback((id: string, field: string, value: string) => {
+    setCreatives(prev => prev?.map(c => c.id === id ? { ...c, [field]: value } : c))
   }, [])
 
   const showBuilder = isBuilding || isComplete
@@ -140,6 +154,7 @@ export default function App() {
               audiences={audiences}
               creatives={creatives}
               campaign={campaign}
+              onCreativeEdit={handleCreativeEdit}
             />
           </div>
         </div>
