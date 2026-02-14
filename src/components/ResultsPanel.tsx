@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target, Pencil, Check, RefreshCw, Share2, CheckCircle2, Search, ArrowRight, Shield } from 'lucide-react'
+import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target, Pencil, Check, RefreshCw, Share2, CheckCircle2, Search, ArrowRight, Shield, ThumbsUp, MessageCircle } from 'lucide-react'
 import type { BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from '../types'
 
 interface Props {
@@ -24,28 +24,28 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
 function BusinessCard({ business }: { business: BusinessProfile }) {
   return (
     <Section>
-      <div className="bg-surface border border-border rounded-xl p-5">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: business.colors[0] + '20' }}>
-            <Building2 className="w-5 h-5" style={{ color: business.colors[0] }} />
+      <div className="gradient-border bg-surface rounded-2xl p-6">
+        <div className="flex items-start gap-4 mb-5">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: business.colors[0] + '20' }}>
+            <Building2 className="w-6 h-6" style={{ color: business.colors[0] }} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-text">{business.name}</h3>
-            <div className="flex items-center gap-2 text-xs text-text-muted">
+            <h3 className="text-xl font-bold text-text">{business.name}</h3>
+            <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
               <span>{business.industry}</span>
-              <span>•</span>
+              <span className="text-text-dim">•</span>
               <span>{business.location}</span>
             </div>
           </div>
         </div>
-        <p className="text-sm text-text-muted mb-4 leading-relaxed">{business.description}</p>
+        <p className="text-sm text-text-muted mb-5 leading-relaxed">{business.description}</p>
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-[10px] text-text-dim uppercase tracking-wide mb-1.5">Strengths</div>
-            <div className="space-y-1">
+            <div className="text-[10px] text-text-dim uppercase tracking-wider mb-2 font-medium">Strengths</div>
+            <div className="space-y-1.5">
               {business.strengths.map((s, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-xs text-success">
+                <div key={i} className="flex items-start gap-2 text-xs text-success">
                   <span className="mt-0.5">✓</span>
                   <span className="text-text-muted">{s}</span>
                 </div>
@@ -53,10 +53,10 @@ function BusinessCard({ business }: { business: BusinessProfile }) {
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-text-dim uppercase tracking-wide mb-1.5">Opportunities</div>
-            <div className="space-y-1">
+            <div className="text-[10px] text-text-dim uppercase tracking-wider mb-2 font-medium">Opportunities</div>
+            <div className="space-y-1.5">
               {business.weaknesses.map((w, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-xs text-warning">
+                <div key={i} className="flex items-start gap-2 text-xs text-warning">
                   <span className="mt-0.5">→</span>
                   <span className="text-text-muted">{w}</span>
                 </div>
@@ -66,11 +66,11 @@ function BusinessCard({ business }: { business: BusinessProfile }) {
         </div>
 
         {/* Brand colors */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-          <span className="text-[10px] text-text-dim uppercase tracking-wide">Brand</span>
-          <div className="flex gap-1">
+        <div className="flex items-center gap-3 mt-5 pt-5 border-t border-border-bright/30">
+          <span className="text-[10px] text-text-dim uppercase tracking-wider font-medium">Brand</span>
+          <div className="flex gap-1.5">
             {business.colors.map((c, i) => (
-              <div key={i} className="w-5 h-5 rounded-full border border-white/10" style={{ backgroundColor: c }} />
+              <div key={i} className="w-6 h-6 rounded-full border border-white/10 shadow-sm" style={{ backgroundColor: c }} />
             ))}
           </div>
           <span className="text-xs text-text-dim ml-auto">{business.tone}</span>
@@ -83,24 +83,24 @@ function BusinessCard({ business }: { business: BusinessProfile }) {
 function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
   return (
     <Section>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <Users className="w-4 h-4 text-blue-400" />
-        <h3 className="text-sm font-medium text-text">Target Audiences</h3>
+        <h3 className="text-sm font-semibold text-text">Target Audiences</h3>
       </div>
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-4">
         {audiences.map((a, i) => (
-          <div key={i} className="bg-surface border border-border rounded-xl p-4 slide-in" style={{ animationDelay: `${i * 150}ms` }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{a.emoji}</span>
+          <div key={i} className="gradient-border bg-surface rounded-2xl p-5 slide-in" style={{ animationDelay: `${i * 150}ms` }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xl">{a.emoji}</span>
               <div>
-                <div className="text-sm font-medium text-text">{a.name}</div>
+                <div className="text-sm font-semibold text-text">{a.name}</div>
                 <div className="text-[10px] text-text-dim">Age {a.age} • {a.platforms.join(', ')}</div>
               </div>
             </div>
-            <p className="text-xs text-text-muted mb-3">{a.description}</p>
-            <div className="flex flex-wrap gap-1">
+            <p className="text-xs text-text-muted mb-3 leading-relaxed">{a.description}</p>
+            <div className="flex flex-wrap gap-1.5">
               {a.interests.map((interest, j) => (
-                <span key={j} className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] rounded-full border border-blue-500/20">
+                <span key={j} className="px-2.5 py-1 bg-blue-500/10 text-blue-400 text-[10px] rounded-full border border-blue-500/20">
                   {interest}
                 </span>
               ))}
@@ -115,49 +115,48 @@ function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
 function ApprovalGate({ business, audiences, onApprove }: { business: BusinessProfile; audiences: AudiencePersona[]; onApprove: () => void }) {
   return (
     <Section>
-      <div className="bg-surface border-2 border-accent/40 rounded-xl p-6 relative overflow-hidden">
-        {/* Subtle gradient accent */}
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-purple-500/5 pointer-events-none" />
+      <div className="relative rounded-2xl overflow-hidden">
+        {/* Dramatic gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-purple-500/10 to-accent-secondary/15 gradient-shift" />
+        <div className="absolute inset-0 border-2 border-accent/30 rounded-2xl pointer-events-none" />
         
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-accent-bright" />
+        <div className="relative p-8">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/30 to-purple-500/30 flex items-center justify-center mb-4 backdrop-blur-sm border border-accent/20">
+              <Shield className="w-8 h-8 text-accent-bright" />
             </div>
-            <div>
-              <h3 className="text-base font-semibold text-text">Strategy Complete</h3>
-              <p className="text-xs text-text-muted">Phase 1 analysis finished — ready for campaign execution</p>
-            </div>
+            <h3 className="text-xl font-bold text-text mb-1">Strategy Complete</h3>
+            <p className="text-sm text-text-muted">Phase 1 analysis finished — ready for campaign execution</p>
           </div>
 
-          <div className="bg-surface-2 rounded-lg p-4 mb-4 border border-border">
-            <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="bg-bg/60 backdrop-blur-sm rounded-xl p-5 mb-6 border border-border-bright/30">
+            <div className="grid grid-cols-3 gap-6 text-center">
               <div>
                 <div className="text-lg font-bold text-text">{business.name}</div>
-                <div className="text-[10px] text-text-dim uppercase tracking-wide">Business</div>
+                <div className="text-[10px] text-text-dim uppercase tracking-wider mt-1">Business</div>
               </div>
               <div>
                 <div className="text-lg font-bold text-accent-bright">{audiences.length}</div>
-                <div className="text-[10px] text-text-dim uppercase tracking-wide">Audiences</div>
+                <div className="text-[10px] text-text-dim uppercase tracking-wider mt-1">Audiences</div>
               </div>
               <div>
                 <div className="text-lg font-bold text-success">Lead Gen</div>
-                <div className="text-[10px] text-text-dim uppercase tracking-wide">Objective</div>
+                <div className="text-[10px] text-text-dim uppercase tracking-wider mt-1">Objective</div>
               </div>
             </div>
           </div>
 
-          <p className="text-sm text-text-muted mb-4">
+          <p className="text-sm text-text-muted mb-6 text-center max-w-md mx-auto leading-relaxed">
             We've analysed <strong className="text-text">{business.name}</strong>, identified {audiences.length} target audiences, 
             and planned a lead generation strategy. Ready to generate ad copy, creatives, and assemble your campaign?
           </p>
 
           <button
             onClick={onApprove}
-            className="w-full py-3.5 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-bright hover:to-purple-400 text-white font-semibold rounded-xl transition cursor-pointer text-sm flex items-center justify-center gap-2 group"
+            className="w-full py-4 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-bright hover:to-purple-400 text-white font-bold rounded-xl transition cursor-pointer text-base flex items-center justify-center gap-2 group shadow-lg shadow-accent/20 hover:shadow-accent/40"
           >
             Execute Campaign
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </div>
@@ -178,7 +177,7 @@ function EditableText({ value, onSave, className = '', multiline = false }: {
           <textarea
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            className="flex-1 bg-surface-3 border border-accent/30 rounded px-2 py-1 text-sm text-text focus:outline-none resize-none"
+            className="flex-1 bg-surface-3 border border-accent/30 rounded-lg px-2 py-1 text-sm text-text focus:outline-none resize-none"
             rows={3}
             autoFocus
           />
@@ -186,7 +185,7 @@ function EditableText({ value, onSave, className = '', multiline = false }: {
           <input
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            className="flex-1 bg-surface-3 border border-accent/30 rounded px-2 py-1 text-sm text-text focus:outline-none"
+            className="flex-1 bg-surface-3 border border-accent/30 rounded-lg px-2 py-1 text-sm text-text focus:outline-none"
             autoFocus
             onKeyDown={e => { if (e.key === 'Enter') { onSave(draft); setEditing(false) } }}
           />
@@ -209,26 +208,31 @@ function EditableText({ value, onSave, className = '', multiline = false }: {
 function AdPreviewCards({ creatives, onEdit }: { creatives: AdCreative[]; onEdit?: (id: string, field: string, value: string) => void }) {
   return (
     <Section>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <Zap className="w-4 h-4 text-pink-400" />
-        <h3 className="text-sm font-medium text-text">Facebook Ad Creatives</h3>
+        <h3 className="text-sm font-semibold text-text">Facebook Ad Creatives</h3>
         <span className="text-[10px] text-text-dim ml-auto">Click any text to edit</span>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-5">
         {creatives.map((ad, i) => (
-          <div key={ad.id} className="bg-surface border border-border rounded-xl overflow-hidden slide-in" style={{ animationDelay: `${i * 200}ms` }}>
-            <div className="p-4">
-              {/* Ad header */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs">🏢</div>
-                <div>
-                  <div className="text-xs font-medium text-text">Your Business</div>
-                  <div className="text-[10px] text-text-dim">Sponsored · 🌐</div>
+          <div key={ad.id} className="gradient-border bg-surface rounded-2xl overflow-hidden slide-in" style={{ animationDelay: `${i * 200}ms` }}>
+            <div className="p-5">
+              {/* Facebook post header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-sm">🏢</div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-text">Your Business</div>
+                  <div className="flex items-center gap-1 text-[11px] text-text-dim">
+                    <span>Sponsored</span>
+                    <span>·</span>
+                    <span>🌐</span>
+                  </div>
                 </div>
+                <div className="text-text-dim text-lg">···</div>
               </div>
               
               {/* Primary text — editable */}
-              <div className="text-sm text-text mb-3 leading-relaxed">
+              <div className="text-sm text-text mb-4 leading-relaxed">
                 <EditableText 
                   value={ad.primaryText} 
                   onSave={v => onEdit?.(ad.id, 'primaryText', v)}
@@ -237,33 +241,49 @@ function AdPreviewCards({ creatives, onEdit }: { creatives: AdCreative[]; onEdit
               </div>
               
               {/* Image placeholder */}
-              <div className="bg-gradient-to-br from-surface-2 to-surface-3 rounded-lg h-40 flex items-center justify-center border border-border mb-3 relative group">
+              <div className="bg-gradient-to-br from-surface-2 to-surface-3 rounded-xl h-44 flex items-center justify-center border border-border-bright/30 mb-0 relative group">
                 <div className="text-center">
-                  <div className="text-2xl mb-1">🎨</div>
+                  <div className="text-3xl mb-2">🎨</div>
                   <div className="text-[10px] text-text-dim max-w-[200px]">{ad.imagePrompt.slice(0, 60)}...</div>
                 </div>
-                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition rounded-lg">
-                  <span className="text-xs text-accent flex items-center gap-1">
+                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition rounded-xl">
+                  <span className="text-xs text-accent flex items-center gap-1.5 bg-surface/80 px-3 py-1.5 rounded-full backdrop-blur-sm">
                     <RefreshCw className="w-3 h-3" /> Regenerate
                   </span>
                 </div>
               </div>
 
-              {/* Headline + CTA — editable */}
-              <div className="flex items-center justify-between bg-surface-2 rounded-lg p-3 border border-border">
+              {/* Headline + CTA bar */}
+              <div className="flex items-center justify-between bg-surface-2/80 p-4 border-t border-border-bright/20">
                 <div>
-                  <div className="text-xs font-semibold text-text">
+                  <div className="text-sm font-bold text-text mb-0.5">
                     <EditableText value={ad.headline} onSave={v => onEdit?.(ad.id, 'headline', v)} />
                   </div>
-                  <div className="text-[10px] text-text-dim">yourbusiness.com</div>
+                  <div className="text-[11px] text-text-dim">yourbusiness.com</div>
                 </div>
-                <button className="px-3 py-1.5 bg-accent/20 text-accent text-xs font-medium rounded-md border border-accent/30">
+                <button className="px-4 py-2 bg-accent/20 text-accent text-sm font-semibold rounded-lg border border-accent/30 hover:bg-accent/30 transition">
                   {ad.cta}
                 </button>
               </div>
 
+              {/* Facebook action bar */}
+              <div className="flex items-center justify-around py-3 border-t border-border-bright/20 text-text-dim">
+                <button className="flex items-center gap-1.5 text-xs hover:text-text transition">
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>Like</span>
+                </button>
+                <button className="flex items-center gap-1.5 text-xs hover:text-text transition">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Comment</span>
+                </button>
+                <button className="flex items-center gap-1.5 text-xs hover:text-text transition">
+                  <Share2 className="w-4 h-4" />
+                  <span>Share</span>
+                </button>
+              </div>
+
               {/* Angle tag */}
-              <div className="mt-3 flex items-center gap-1.5">
+              <div className="pt-3 border-t border-border-bright/20 flex items-center gap-1.5">
                 <Target className="w-3 h-3 text-text-dim" />
                 <span className="text-[10px] text-text-dim">Angle: {ad.angle}</span>
               </div>
@@ -278,33 +298,33 @@ function AdPreviewCards({ creatives, onEdit }: { creatives: AdCreative[]; onEdit
 function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
   return (
     <Section>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <Search className="w-4 h-4 text-blue-400" />
-        <h3 className="text-sm font-medium text-text">Google Search Ads</h3>
+        <h3 className="text-sm font-semibold text-text">Google Search Ads</h3>
         <span className="text-[10px] text-text-dim ml-auto">Preview</span>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {googleAds.map((ad, i) => (
           <div
             key={ad.id}
-            className="bg-surface border border-border rounded-xl p-4 slide-in"
+            className="gradient-border bg-surface rounded-2xl p-5 slide-in"
             style={{ animationDelay: `${i * 150}ms` }}
           >
             {/* Sponsored label */}
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <span className="text-[10px] font-medium text-text-dim bg-surface-2 px-1.5 py-0.5 rounded">Sponsored</span>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[10px] font-semibold text-text-dim bg-surface-2 px-2 py-0.5 rounded">Sponsored</span>
             </div>
 
             {/* Display URL */}
-            <div className="flex items-center gap-1 mb-1">
-              <div className="w-4 h-4 rounded-full bg-surface-2 border border-border flex items-center justify-center">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="w-5 h-5 rounded-full bg-surface-2 border border-border flex items-center justify-center">
                 <span className="text-[8px] text-text-dim">🔒</span>
               </div>
               <span className="text-xs text-[#76d6a1]">{ad.displayUrl}</span>
             </div>
 
             {/* Headlines as blue links */}
-            <h4 className="text-[#8ab4f8] text-base font-medium leading-snug mb-1.5 hover:underline cursor-pointer">
+            <h4 className="text-[#8ab4f8] text-base font-medium leading-snug mb-2 hover:underline cursor-pointer">
               {ad.headlines.join(' | ')}
             </h4>
 
@@ -316,7 +336,7 @@ function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
             </div>
 
             {/* Sitelinks */}
-            <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 border-t border-border">
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-border-bright/30">
               {ad.siteLinks.map((link, j) => (
                 <span key={j} className="text-xs text-[#8ab4f8] hover:underline cursor-pointer">{link}</span>
               ))}
@@ -331,22 +351,23 @@ function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
 function CampaignSummary({ campaign }: { campaign: CampaignConfig }) {
   return (
     <Section>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <BarChart3 className="w-4 h-4 text-orange-400" />
-        <h3 className="text-sm font-medium text-text">Campaign Summary</h3>
+        <h3 className="text-sm font-semibold text-text">Campaign Summary</h3>
       </div>
-      <div className="bg-surface border border-border rounded-xl p-5">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <Stat icon={<Target className="w-4 h-4 text-accent" />} label="Objective" value={campaign.objective} />
-          <Stat icon={<DollarSign className="w-4 h-4 text-success" />} label="Daily Budget" value={`$${campaign.dailyBudget} ${campaign.currency}`} />
-          <Stat icon={<Calendar className="w-4 h-4 text-blue-400" />} label="Duration" value={`${campaign.duration} days`} />
-          <Stat icon={<Eye className="w-4 h-4 text-purple-400" />} label="Est. Reach" value={campaign.estimatedReach} />
-          <Stat icon={<MousePointer className="w-4 h-4 text-amber-400" />} label="Est. Clicks" value={campaign.estimatedClicks} />
-          <Stat icon={<TrendingUp className="w-4 h-4 text-pink-400" />} label="Est. CPL" value={campaign.estimatedCpl} />
+      <div className="gradient-border bg-surface rounded-2xl p-6">
+        {/* Revolut-style stat grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <StatCard icon={<Target className="w-5 h-5 text-accent" />} label="Objective" value={campaign.objective} />
+          <StatCard icon={<DollarSign className="w-5 h-5 text-success" />} label="Daily Budget" value={`$${campaign.dailyBudget} ${campaign.currency}`} />
+          <StatCard icon={<Calendar className="w-5 h-5 text-blue-400" />} label="Duration" value={`${campaign.duration} days`} />
+          <StatCard icon={<Eye className="w-5 h-5 text-purple-400" />} label="Est. Reach" value={campaign.estimatedReach} />
+          <StatCard icon={<MousePointer className="w-5 h-5 text-amber-400" />} label="Est. Clicks" value={campaign.estimatedClicks} />
+          <StatCard icon={<TrendingUp className="w-5 h-5 text-pink-400" />} label="Est. CPL" value={campaign.estimatedCpl} />
         </div>
 
-        <div className="pt-4 border-t border-border space-y-2">
-          <button className="w-full py-3 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-bright hover:to-purple-400 text-white font-semibold rounded-xl transition cursor-pointer text-sm">
+        <div className="pt-5 border-t border-border-bright/30 space-y-3">
+          <button className="w-full py-4 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-bright hover:to-purple-400 text-white font-bold rounded-xl transition cursor-pointer text-base shadow-lg shadow-accent/20 hover:shadow-accent/40 flex items-center justify-center gap-2">
             🚀 Launch Campaign
           </button>
           <ShareButton />
@@ -354,6 +375,18 @@ function CampaignSummary({ campaign }: { campaign: CampaignConfig }) {
         </div>
       </div>
     </Section>
+  )
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-bg/50 rounded-xl p-4 border border-border-bright/20">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-[10px] text-text-dim uppercase tracking-wider font-medium">{label}</span>
+      </div>
+      <div className="text-base font-bold text-text">{value}</div>
+    </div>
   )
 }
 
@@ -374,7 +407,7 @@ function ShareButton() {
   return (
     <button
       onClick={handleShare}
-      className="w-full py-2.5 flex items-center justify-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border rounded-xl transition cursor-pointer text-sm text-text-muted hover:text-text"
+      className="w-full py-3 flex items-center justify-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-bright/30 rounded-xl transition cursor-pointer text-sm text-text-muted hover:text-text"
     >
       {copied ? (
         <>
@@ -391,18 +424,6 @@ function ShareButton() {
   )
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-2">
-      <div className="mt-0.5 flex-shrink-0">{icon}</div>
-      <div>
-        <div className="text-[10px] text-text-dim">{label}</div>
-        <div className="text-sm font-medium text-text">{value}</div>
-      </div>
-    </div>
-  )
-}
-
 export function ResultsPanel({ business, audiences, creatives, googleAds, campaign, onCreativeEdit, awaitingApproval, onApprove }: Props) {
   const hasAnything = business || audiences || creatives || googleAds || campaign
 
@@ -415,7 +436,7 @@ export function ResultsPanel({ business, audiences, creatives, googleAds, campai
   }
 
   return (
-    <div className="space-y-6 p-1">
+    <div className="space-y-8 p-1">
       {business && <BusinessCard business={business} />}
       {audiences && <AudienceCards audiences={audiences} />}
       {awaitingApproval && business && audiences && !creatives && (

@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #09090f;
-  --color-surface: #111118;
-  --color-surface-2: #191922;
-  --color-surface-3: #21212e;
-  --color-border: #28283a;
-  --color-border-bright: #38384d;
-  --color-text: #e8e8f0;
-  --color-text-muted: #9090a8;
-  --color-text-dim: #585870;
+  --color-bg: #0a0e1a;
+  --color-surface: #111827;
+  --color-surface-2: #1e293b;
+  --color-surface-3: #334155;
+  --color-border: #1e293b;
+  --color-border-bright: #334155;
+  --color-text: #f0f0f8;
+  --color-text-muted: #a0a0bc;
+  --color-text-dim: #64648a;
   --color-accent: #6366f1;
   --color-accent-bright: #818cf8;
+  --color-accent-secondary: #06b6d4;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
@@ -46,7 +47,7 @@ body {
 }
 
 .slide-in {
-  animation: slide-in 0.4s ease-out both;
+  animation: slide-in 0.5s ease-out both;
 }
 
 @keyframes fade-in {
@@ -56,4 +57,64 @@ body {
 
 .fade-in {
   animation: fade-in 0.3s ease-out;
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+.orb-float {
+  animation: orb-float 12s ease-in-out infinite;
+}
+
+@keyframes orb-float-reverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-25px, 20px) scale(0.95); }
+  66% { transform: translate(20px, -15px) scale(1.05); }
+}
+
+.orb-float-reverse {
+  animation: orb-float-reverse 15s ease-in-out infinite;
+}
+
+/* Gradient border utility */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-secondary) 50%, #a855f7 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.4;
+  pointer-events: none;
 }

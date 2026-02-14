@@ -30,21 +30,25 @@ export function BuildProgress({ stages }: Props) {
   return (
     <div className="w-72 flex-shrink-0">
       {/* Progress bar */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-text-muted">Building campaign</span>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="text-xs font-medium text-text-muted">Building campaign</span>
           <span className="text-xs text-text-dim font-mono">{Math.round(progress)}%</span>
         </div>
-        <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
+        <div className="h-2 bg-surface-2 rounded-full overflow-hidden relative">
           <div 
-            className="h-full bg-gradient-to-r from-accent to-purple-500 rounded-full transition-all duration-700 ease-out"
+            className="h-full bg-gradient-to-r from-accent via-accent-bright to-accent-secondary rounded-full transition-all duration-700 ease-out relative"
             style={{ width: `${progress}%` }}
-          />
+          >
+            {progress > 0 && (
+              <div className="absolute inset-0 rounded-full glow" style={{ boxShadow: '0 0 12px 2px rgba(99, 102, 241, 0.5)' }} />
+            )}
+          </div>
         </div>
       </div>
 
       {/* Stages */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {stages.map((stage, i) => {
           const meta = STAGE_META[stage.id]
           const isRunning = stage.status === 'running'
@@ -54,8 +58,8 @@ export function BuildProgress({ stages }: Props) {
           return (
             <div
               key={stage.id}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                isRunning ? 'bg-accent/5 border border-accent/20' : ''
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                isRunning ? 'bg-accent/8 border border-accent/20' : ''
               }`}
             >
               {/* Status icon */}
@@ -71,7 +75,7 @@ export function BuildProgress({ stages }: Props) {
 
               {/* Label */}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs font-medium ${isPending ? 'text-text-dim' : 'text-text'}`}>
+                <div className={`text-sm font-medium ${isPending ? 'text-text-dim' : 'text-text'}`}>
                   {stage.label}
                 </div>
                 {isRunning && stage.thinkingText && (

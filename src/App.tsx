@@ -142,14 +142,14 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col bg-bg overflow-hidden">
       {/* Header */}
-      <header className="border-b border-border bg-surface/50 backdrop-blur-sm flex-shrink-0 z-50">
-        <div className="px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
+      <header className="relative border-b border-border bg-surface/60 backdrop-blur-md flex-shrink-0 z-50">
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shadow-lg shadow-accent/20">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-text text-sm">AdForge</span>
-            <span className="text-[10px] text-text-dim bg-surface-2 px-2 py-0.5 rounded-full">AI Campaign Builder</span>
+            <span className="font-bold text-text text-base tracking-tight">AdForge</span>
+            <span className="text-[10px] text-text-dim bg-surface-2 px-2.5 py-1 rounded-full border border-border-bright/30 font-medium">AI Campaign Builder</span>
           </div>
           <div className="flex items-center gap-4">
             {isBuilding && (
@@ -172,7 +172,7 @@ export default function App() {
                 </div>
                 <button
                   onClick={handleReset}
-                  className="text-xs text-text-muted hover:text-text px-2 py-1 rounded border border-border hover:border-border-bright transition cursor-pointer"
+                  className="text-xs text-text-muted hover:text-text px-3 py-1.5 rounded-lg border border-border hover:border-border-bright transition cursor-pointer"
                 >
                   ← New URL
                 </button>
@@ -183,6 +183,8 @@ export default function App() {
             )}
           </div>
         </div>
+        {/* Gradient line under header */}
+        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </header>
 
       {/* Main */}
@@ -194,7 +196,7 @@ export default function App() {
         <div className="flex-1 flex overflow-hidden">
           {/* Left: Progress + Thinking */}
           <div className="w-80 flex-shrink-0 flex flex-col border-r border-border">
-            <div className="p-4 flex-shrink-0">
+            <div className="p-5 flex-shrink-0">
               <BuildProgress stages={stages} />
             </div>
             <div className="flex-1 px-4 pb-4 min-h-0">
@@ -203,7 +205,7 @@ export default function App() {
           </div>
 
           {/* Right: Results */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-8">
             <ResultsPanel
               business={business}
               audiences={audiences}
