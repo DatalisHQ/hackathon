@@ -47,13 +47,13 @@ This was built for a hackathon about AI interaction design, so the UX is the poi
 ```bash
 git clone https://github.com/DatalisHQ/hackathon.git
 cd hackathon
+cp .env.example .env
+# Add your Anthropic API key to .env
 npm install
 npm run dev
 ```
 
-Needs an Anthropic API key for real analysis. Without one it falls back to generated placeholder data.
-
-Create `api/claude.ts` as a Vercel Edge Function or add `ANTHROPIC_API_KEY` to your env.
+Without an API key it still works but falls back to placeholder data instead of real AI analysis.
 
 ## Stack
 
