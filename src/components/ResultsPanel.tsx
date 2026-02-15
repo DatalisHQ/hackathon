@@ -246,43 +246,38 @@ export function AdPreviewCards({ creatives, onEdit, brandColors }: { creatives: 
                 />
               </div>
               
-              {/* Image placeholder — dynamic gradient mockup */}
+              {/* Ad image — real or placeholder */}
               <div className="rounded-xl h-48 relative group overflow-hidden border border-border-bright/30 mb-0">
-                {/* Animated gradient background using brand colors */}
-                <div
-                  className="absolute inset-0 gradient-shift opacity-90"
-                  style={{
-                    background: `linear-gradient(135deg, ${ad._brandColors?.[0] || '#6366f1'}22 0%, ${ad._brandColors?.[1] || '#06b6d4'}33 30%, ${ad._brandColors?.[0] || '#6366f1'}22 60%, ${ad._brandColors?.[2] || '#a855f7'}33 100%)`,
-                  }}
-                />
-                {/* Grid/blueprint overlay */}
-                <div className="absolute inset-0 opacity-10" style={{
-                  backgroundImage: `
-                    linear-gradient(rgba(99,102,241,0.3) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(99,102,241,0.3) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '24px 24px',
-                }} />
-                {/* Wireframe mockup elements */}
-                <div className="absolute inset-0 p-5 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="w-2/3 h-3 rounded-full bg-white/10" />
-                    <div className="w-1/2 h-2 rounded-full bg-white/6" />
-                  </div>
-                  <div className="flex items-end justify-between">
-                    <div className="space-y-1.5 flex-1">
-                      <div className="w-3/4 h-2 rounded-full bg-white/8" />
-                      <div className="w-1/2 h-2 rounded-full bg-white/5" />
+                {ad.imageUrl ? (
+                  /* Real AI-generated image */
+                  <img
+                    src={ad.imageUrl}
+                    alt={`Ad creative: ${ad.headline}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  /* Placeholder gradient */
+                  <>
+                    <div
+                      className="absolute inset-0 gradient-shift opacity-90"
+                      style={{
+                        background: `linear-gradient(135deg, ${ad._brandColors?.[0] || '#6366f1'}22 0%, ${ad._brandColors?.[1] || '#06b6d4'}33 30%, ${ad._brandColors?.[0] || '#6366f1'}22 60%, ${ad._brandColors?.[2] || '#a855f7'}33 100%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 opacity-10" style={{
+                      backgroundImage: `
+                        linear-gradient(rgba(99,102,241,0.3) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(99,102,241,0.3) 1px, transparent 1px)
+                      `,
+                      backgroundSize: '24px 24px',
+                    }} />
+                    <div className="absolute inset-0 flex items-center justify-center px-6">
+                      <p className="text-[11px] text-text-muted/70 font-mono text-center leading-relaxed max-w-[280px] select-none">
+                        {ad.imagePrompt.slice(0, 120)}{ad.imagePrompt.length > 120 ? '...' : ''}
+                      </p>
                     </div>
-                    <div className="w-16 h-7 rounded-lg bg-white/10 border border-white/10" />
-                  </div>
-                </div>
-                {/* Image prompt overlay */}
-                <div className="absolute inset-0 flex items-center justify-center px-6">
-                  <p className="text-[11px] text-text-muted/70 font-mono text-center leading-relaxed max-w-[280px] select-none">
-                    {ad.imagePrompt.slice(0, 120)}{ad.imagePrompt.length > 120 ? '...' : ''}
-                  </p>
-                </div>
+                  </>
+                )}
                 {/* AI Generated badge */}
                 <div className="absolute top-3 right-3 bg-bg/70 backdrop-blur-sm border border-accent/30 rounded-full px-2.5 py-1 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent pulse-dot" />

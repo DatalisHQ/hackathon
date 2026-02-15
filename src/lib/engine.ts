@@ -90,6 +90,21 @@ async function callClaude(prompt: string, maxTokens: number = 3000, userContext?
   return ''
 }
 
+async function generateImage(prompt: string): Promise<string | null> {
+  try {
+    const res = await fetch('/api/image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt + ' Photorealistic, professional quality. Square format. No text or words in the image.' }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return data.image ? `data:${data.mimeType || 'image/jpeg'};base64,${data.image}` : null
+    }
+  } catch {}
+  return null
+}
+
 // ─── Business Analysis ─────────────────────────────────────────────────────
 
 async function analyseBusiness(url: string, scraped: { title: string; description: string; text: string }, userContext?: string[]): Promise<BusinessProfile> {
@@ -694,17 +709,31 @@ export async function executeCampaign(
 
   // ── Stage 6: Creatives ──
   onUpdate({ stage: { id: 'creatives', changes: { status: 'running', startedAt: Date.now() } } })
-  onUpdate({ thinking: { type: 'system', text: '→ Generating visual concepts for ad creatives...' } })
+  onUpdate({ thinking: { type: 'system', text: '→ Generating ad images with Nano Banana Pro...' } })
+  
+  // Generate all images in parallel for speed
+  const imagePromises = creatives.map((c, i) => {
+    onUpdate({ stage: { id: 'creatives', changes: { thinkingText: `Generating image ${i + 1}/${creatives.length}...` } } })
+    onUpdate({ thinking: { type: 'data', text: `  Prompt: "${c.imagePrompt.slice(0, 80)}..."` } })
+    return generateImage(c.imagePrompt)
+  })
+
+  const images = await Promise.allSettled(imagePromises)
   
   for (let i = 0; i < creatives.length; i++) {
-    onUpdate({ stage: { id: 'creatives', changes: { thinkingText: `Designing creative ${i + 1}/${creatives.length}...` } } })
-    onUpdate({ thinking: { type: 'data', text: `  Prompt: "${creatives[i].imagePrompt.slice(0, 80)}..."` } })
-    await delay(randomBetween(800, 1500))
-    onUpdate({ thinking: { type: 'insight', text: `  ✓ Creative ${i + 1} generated (${creatives[i].angle})` } })
-    await delay(200)
+    const result = images[i]
+    if (result.status === 'fulfilled' && result.value) {
+      creatives[i].imageUrl = result.value
+      onUpdate({ thinking: { type: 'insight', text: `  ✓ Creative ${i + 1} generated (${creatives[i].angle})` } })
+    } else {
+      onUpdate({ thinking: { type: 'data', text: `  ⚠ Creative ${i + 1} using placeholder (${creatives[i].angle})` } })
+    }
+    // Re-emit creatives so UI updates with images progressively
+    onUpdate({ creatives: [...creatives] })
+    await delay(300)
   }
 
-  onUpdate({ thinking: { type: 'highlight', text: `✓ ${creatives.length} ad creatives designed` } })
+  onUpdate({ thinking: { type: 'highlight', text: `✓ ${creatives.length} ad creatives generated` } })
 
   onUpdate({ stage: { id: 'creatives', changes: { 
     status: 'completed', 
