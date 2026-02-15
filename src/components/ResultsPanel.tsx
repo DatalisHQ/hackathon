@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye, MousePointer, Target, Pencil, Check, RefreshCw, Share2, CheckCircle2, Search, ArrowRight, Shield, ThumbsUp, MessageCircle } from 'lucide-react'
 import type { BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from '../types'
+import { ABTestPanel } from './ABTestPanel'
 
 interface Props {
   business?: BusinessProfile
@@ -485,6 +486,9 @@ export function ResultsPanel({ business, audiences, creatives, googleAds, campai
       {creatives && <AdPreviewCards creatives={creatives} onEdit={onCreativeEdit} brandColors={business?.colors} />}
       {googleAds && <GoogleAdCards googleAds={googleAds} />}
       {campaign && <CampaignSummary campaign={campaign} />}
+      {creatives && business && campaign && (
+        <ABTestPanel creatives={creatives} business={business} campaign={campaign} />
+      )}
     </div>
   )
 }

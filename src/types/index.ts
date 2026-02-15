@@ -76,6 +76,29 @@ export interface CampaignConfig {
   estimatedClicks: string
 }
 
+export interface SimulationResult {
+  creativeId: string
+  variant: string // "A", "B", "C"
+  impressions: number
+  clicks: number
+  ctr: number
+  cpc: number
+  conversions: number
+  conversionRate: number
+  costPerLead: number
+  estimatedMonthlyLeads: number
+  roas: number
+  confidence: number
+  isWinner: boolean
+}
+
+export interface IndustryBenchmark {
+  industry: string
+  avgCtr: number
+  avgCpc: number
+  avgCvr: number
+}
+
 export interface CampaignBuild {
   url: string
   status: 'idle' | 'building' | 'complete' | 'error'
