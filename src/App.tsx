@@ -69,15 +69,95 @@ export default function App() {
     return msgs
   }, [])
 
-  const handleUserMessage = useCallback((message: string) => {
-    userMessagesRef.current.push(message)
+  const handleUserMessage = useCallback(async (message: string) => {
+    // Add to thinking stream
     setThinkingLines(prev => [...prev, {
       id: crypto.randomUUID(),
       type: 'user' as const,
       text: message,
       timestamp: Date.now(),
     }])
-  }, [])
+    // Switch to Agent tab so user sees their message + response
+    setActiveTab('agent')
+
+    if (isBuilding) {
+      // During build: queue for next stage + acknowledge
+      userMessagesRef.current.push(message)
+      setTimeout(() => {
+        setThinkingLines(prev => [...prev, {
+          id: crypto.randomUUID(),
+          type: 'system' as const,
+          text: `→ Noted — I'll incorporate that into the next step.`,
+          timestamp: Date.now(),
+        }])
+      }, 400)
+    } else {
+      // Post-build or awaiting approval: answer directly via Claude
+      setTimeout(() => {
+        setThinkingLines(prev => [...prev, {
+          id: crypto.randomUUID(),
+          type: 'system' as const,
+          text: `→ Thinking...`,
+          timestamp: Date.now(),
+        }])
+      }, 300)
+
+      try {
+        const context = [
+          business ? `Business: ${business.name} (${business.industry}, ${business.location})` : '',
+          audiences ? `Audiences: ${audiences.map(a => a.name).join(', ')}` : '',
+          creatives ? `Ad creatives: ${creatives.map(c => `"${c.headline}" (${c.angle})`).join(', ')}` : '',
+          campaign ? `Campaign: ${campaign.objective}, $${campaign.dailyBudget}/day ${campaign.currency}, ${campaign.duration} days` : '',
+        ].filter(Boolean).join('\n')
+
+        const res = await fetch('/api/claude', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `You are AdForge, an AI ad campaign builder. You just built a campaign for a business. Answer the user's question concisely (1-3 sentences max). Be direct and helpful.
+
+Campaign context:
+${context}
+
+User asks: ${message}
+
+Reply concisely:`,
+            maxTokens: 300,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.text) {
+            setThinkingLines(prev => {
+              // Remove the "Thinking..." line
+              const filtered = prev.filter(l => l.text !== '→ Thinking...')
+              return [...filtered, {
+                id: crypto.randomUUID(),
+                type: 'insight' as const,
+                text: data.text.trim(),
+                timestamp: Date.now(),
+              }]
+            })
+            speak(data.text.trim(), 'high')
+            return
+          }
+        }
+      } catch {}
+
+      // Fallback if Claude call fails
+      setTimeout(() => {
+        setThinkingLines(prev => {
+          const filtered = prev.filter(l => l.text !== '→ Thinking...')
+          return [...filtered, {
+            id: crypto.randomUUID(),
+            type: 'insight' as const,
+            text: `Your campaign targets ${audiences?.length || 0} audiences with ${creatives?.length || 0} ad variants. Check the Campaign tab for full details.`,
+            timestamp: Date.now(),
+          }]
+        })
+      }, 800)
+    }
+  }, [isBuilding, business, audiences, creatives, campaign])
 
   useEffect(() => {
     if (isBuilding) {

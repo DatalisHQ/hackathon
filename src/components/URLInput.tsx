@@ -8,8 +8,8 @@ interface Props {
 
 const EXAMPLES = [
   { url: 'https://www.sophiie.ai', label: 'Sophiie AI' },
-  { url: 'https://zuckerbot.ai', label: 'ZuckerBot' },
-  { url: 'https://www.runtopia.org', label: 'Runtopia' },
+  { url: 'https://www.getjobber.com', label: 'Jobber' },
+  { url: 'https://www.servicetitan.com', label: 'ServiceTitan' },
 ]
 
 export function URLInput({ onSubmit, isBuilding }: Props) {
