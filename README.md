@@ -1,74 +1,48 @@
-# Sophiie AI Agents Hackathon 2026
+# AdForge
 
-## Your Submission
+Paste a URL. Get an ad campaign. That's it.
 
-### Participant
+## What is this
 
-| Field | Your Answer |
-|-------|-------------|
-| Name | Davis Grainger |
-| University / Employer | Datalis / Independent |
+AdForge is an AI agent that builds Facebook and Google ad campaigns from scratch. You give it a business URL, it scrapes the site, figures out what the business does, builds audience personas, writes ad copy, generates creatives, and assembles a ready-to-launch campaign. Takes about 60 seconds.
 
-### Project
+No forms. No onboarding. No 15-step wizard. Just a URL.
 
-| Field | Your Answer |
-|-------|-------------|
-| Project Name | AdForge |
-| One-Line Description | Paste a URL. Watch AI build your entire Facebook ad campaign in 60 seconds. |
-| Demo Video Link | *(recording in progress)* |
-| Tech Stack | React, TypeScript, Vite, Tailwind CSS v4, Zustand, Web Audio API, Canvas Confetti |
-| AI Provider(s) Used | Anthropic Claude (Sonnet 4) for business analysis, audience generation, and ad copywriting |
+**Live:** https://outbound-agent-alpha.vercel.app
 
-### About Your Project
+## Why
 
-#### What does it do?
+Small businesses pay agencies $2-5K/month for ad campaigns. Most of that work is templated. An AI can do it in a minute for close to nothing. That's the bet.
 
-AdForge turns any business URL into a ready-to-launch Facebook ad campaign — autonomously.
+## How it works
 
-You paste a URL. The AI:
-1. **Scrapes and reads** the entire website
-2. **Analyses the business** — identifies industry, strengths, weaknesses, brand tone, and target market
-3. **Creates audience personas** — 3 detailed personas with demographics, interests, pain points, and platform preferences
-4. **Plans the strategy** — picks the right campaign objective, budget, and duration
-5. **Writes ad copy** — 3 complete ad variants with different creative angles (headlines, body text, CTAs)
-6. **Designs creative concepts** — generates image prompts for each ad variant
-7. **Assembles the campaign** — configures targeting, budget, schedule, and performance estimates
+The whole thing runs as an 8-stage pipeline:
 
-The entire process takes about 30-60 seconds. No forms. No questionnaires. Just a URL.
+1. Scrapes the website (CORS proxy + content extraction)
+2. Analyses the business with Claude (industry, strengths, weaknesses, brand tone)
+3. Builds 3 target audience personas
+4. Plans the campaign strategy
+5. Writes Facebook ad copy (3 variants, different angles)
+6. Writes Google Search ads
+7. Assembles campaign config (budget, duration, reach estimates)
+8. Runs A/B simulation with synthetic performance data
 
-#### How does the interaction work?
+You can talk to the agent at any point during the build. Type or use your mic. It picks up your instructions and folds them into the next step.
 
-The interaction is designed around **transparency and control**:
+After it's done you can edit any copy inline, ask questions about the campaign, and run simulated A/B tests against industry benchmarks.
 
-**During the build:**
-- A **live thinking stream** shows the AI's reasoning in real-time — what it's reading on the website, what insights it's extracting, what decisions it's making and why
-- Each thinking line is **color-coded** by type: system operations (gray), raw data (cyan), insights (amber), decisions (purple), confirmations (green)
-- **Sound design** provides subtle audio feedback — ticks on key decisions, chimes on stage completion
-- A **progress tracker** shows which of the 8 stages is active, with live "thinking text" showing the current sub-task
-- Results **appear progressively** on the right panel as each stage completes — you don't wait for everything to finish
+## The interaction stuff
 
-**After the build:**
-- Ad copy is **inline-editable** — click any headline or body text to modify it, the changes save immediately
-- Creative images have a **regenerate hover** — indicating they can be refreshed
-- A **confetti celebration** fires when the campaign is complete (because building something should feel good)
-- **Share button** lets you copy the campaign URL
-- **"New URL" button** lets you try another business immediately
+This was built for a hackathon about AI interaction design, so the UX is the point:
 
-The key insight: **the AI's work should be visible, not hidden behind a spinner.** Watching the agent think, reason, and decide is what makes the interaction feel alive rather than mechanical.
+- **You watch the agent think.** Real-time reasoning stream shows what it's reading, what it decided, and why. Not hidden behind a spinner.
+- **You can interrupt it.** Chat input is always visible. Tell it "focus on local customers" mid-build and it adjusts.
+- **Voice in, voice out.** Mic button for speech input. Agent narrates key decisions via Web Speech API.
+- **Sound design.** Subtle audio ticks on decisions, chimes on stage completion. You can hear the AI working.
+- **Approval gate.** Strategy phase completes, then it stops and asks permission before generating ads. You stay in control.
+- **A/B testing.** After the build, simulate test runs across your ad variants with industry-specific synthetic data.
 
-#### What makes it special?
-
-1. **One input, full output.** Most ad tools require 15-20 form fields before generating anything. AdForge needs one URL. Everything else is inferred.
-
-2. **The AI shows its work.** The thinking stream isn't a gimmick — it builds trust. You can see *why* the AI chose each audience, *why* it wrote each headline, *what* it found on your website. Transparency turns a black box into a collaborator.
-
-3. **Sound as interaction.** Subtle Web Audio API tones provide cognitive feedback without being annoying. You can close your eyes and *hear* the AI working. This is an interaction design choice most AI tools ignore.
-
-4. **Edit, don't regenerate.** Instead of "try again" buttons, you can surgically edit any piece of copy. The AI gives you a starting point; you refine it. This respects the human's expertise while leveraging the AI's speed.
-
-5. **It solves a real $50B problem.** Small businesses pay $2,000-5,000/month to agencies for work that takes an AI 60 seconds. This isn't a demo — it's a product.
-
-#### How to run it
+## Run it locally
 
 ```bash
 git clone https://github.com/DatalisHQ/hackathon.git
@@ -77,47 +51,16 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` and paste any business URL.
+Needs an Anthropic API key for real analysis. Without one it falls back to generated placeholder data.
 
-**Optional:** To enable real AI-powered analysis (instead of fallback data), create a `.env` file:
+Create `api/claude.ts` as a Vercel Edge Function or add `ANTHROPIC_API_KEY` to your env.
 
-```
-ANTHROPIC_API_KEY=your-key-here
-```
+## Stack
 
-Then create `api/` serverless functions will use this key to proxy requests to Claude.
+React, TypeScript, Vite, Tailwind v4. Claude Sonnet 4 via API proxy. Web Audio API for sounds. Web Speech API for voice. Canvas Confetti for the dopamine hit. No UI framework. Everything from scratch.
 
-#### Architecture / Technical Notes
+## Built for
 
-```
-src/
-├── App.tsx              # Main orchestrator — state management, routing
-├── components/
-│   ├── URLInput.tsx      # Hero input with glow effect + preset buttons
-│   ├── BuildProgress.tsx # 8-stage progress tracker with live status
-│   ├── ThinkingStream.tsx# Real-time AI reasoning feed
-│   └── ResultsPanel.tsx  # Business card, audiences, ad previews, campaign summary
-├── lib/
-│   ├── engine.ts         # 8-stage build pipeline with web scraping + Claude API
-│   ├── sounds.ts         # Web Audio API synthesised sound effects
-│   └── confetti.ts       # Canvas confetti celebration
-├── types/
-│   └── index.ts          # Full TypeScript type system
-└── index.css             # Tailwind v4 theme (dark mode, custom tokens)
+Sophiie AI Agents Hackathon 2026. Solo entry. ~24 hours of build time.
 
-api/
-└── claude.ts             # Vercel Edge Function — secure Claude API proxy
-```
-
-**Key design decisions:**
-- **No external UI library** — all components built from scratch for full control over interaction feel
-- **Web Audio API** over audio files — zero network requests, instant playback, synthesised tones
-- **Tailwind v4 with CSS theme tokens** — consistent dark theme without runtime overhead
-- **CORS proxy for web scraping** — uses allorigins.win to fetch websites client-side
-- **Graceful fallback** — works without an API key using intelligently generated placeholder data
-- **Progressive rendering** — results appear as each stage completes, not all at once
-
----
-
-*Built in ~20 hours during the Sophiie AI Agents Hackathon, February 14-15, 2026.*
-*The AI agent that built your ad campaign was powered by the same kind of thinking that powers Sophiie — the belief that AI should do the work, so humans can focus on what matters.*
+The thesis: AI should replace dashboards, not just sit inside them. AdForge is what happens when you let the agent do the whole job instead of making the human click through 40 form fields.
