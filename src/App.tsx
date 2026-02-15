@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles, Volume2, VolumeX } from 'lucide-react'
+import { Sparkles, Volume2, VolumeX, Terminal, Palette, Users, Building2, Rocket } from 'lucide-react'
 import type { Stage, BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from './types'
 import { URLInput } from './components/URLInput'
 import { BuildProgress } from './components/BuildProgress'
-import { ResultsPanel } from './components/ResultsPanel'
+import { ResultsPanel, ApprovalGate } from './components/ResultsPanel'
+import type { ResultView } from './components/ResultsPanel'
 import { ThinkingStream } from './components/ThinkingStream'
 import type { ThinkingLine } from './components/ThinkingStream'
 import { AgentBrowser } from './components/AgentBrowser'
@@ -24,6 +25,22 @@ const INITIAL_STAGES: Stage[] = [
   { id: 'complete', label: 'Ready to Launch', description: 'Campaign complete', status: 'pending' },
 ]
 
+type TabId = 'agent' | 'business' | 'audiences' | 'creatives' | 'campaign'
+
+interface TabDef {
+  id: TabId
+  label: string
+  icon: React.ReactNode
+}
+
+const TABS: TabDef[] = [
+  { id: 'agent', label: 'Agent', icon: <Terminal className="w-3.5 h-3.5" /> },
+  { id: 'business', label: 'Business', icon: <Building2 className="w-3.5 h-3.5" /> },
+  { id: 'audiences', label: 'Audiences', icon: <Users className="w-3.5 h-3.5" /> },
+  { id: 'creatives', label: 'Ad Creatives', icon: <Palette className="w-3.5 h-3.5" /> },
+  { id: 'campaign', label: 'Campaign', icon: <Rocket className="w-3.5 h-3.5" /> },
+]
+
 export default function App() {
   const [isBuilding, setIsBuilding] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
@@ -39,6 +56,8 @@ export default function App() {
   const [awaitingApproval, setAwaitingApproval] = useState(false)
   const [voiceOn, setVoiceOn] = useState(isVoiceEnabled())
   const [currentStageAction, setCurrentStageAction] = useState<string | undefined>(undefined)
+  const [activeTab, setActiveTab] = useState<TabId>('agent')
+  const [notifyTabs, setNotifyTabs] = useState<Set<TabId>>(new Set())
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const startTimeRef = useRef<number>(0)
   const strategyDataRef = useRef<{ business: BusinessProfile; audiences: AudiencePersona[] } | null>(null)
@@ -72,6 +91,25 @@ export default function App() {
     return () => clearInterval(timerRef.current)
   }, [isBuilding, awaitingApproval])
 
+  // Auto-switch tabs when data arrives
+  const switchToTab = useCallback((tab: TabId) => {
+    setActiveTab(tab)
+    // Add notification glow
+    setNotifyTabs(prev => {
+      const next = new Set(prev)
+      next.add(tab)
+      return next
+    })
+    // Remove glow after animation
+    setTimeout(() => {
+      setNotifyTabs(prev => {
+        const next = new Set(prev)
+        next.delete(tab)
+        return next
+      })
+    }, 1500)
+  }, [])
+
   const handleUpdate = useCallback((update: any) => {
     if (update.stage) {
       setStages(prev => prev.map(s =>
@@ -101,23 +139,53 @@ export default function App() {
         playTick()
       }
     }
-    if (update.business) setBusiness(update.business)
-    if (update.audiences) setAudiences(update.audiences)
-    if (update.creatives) setCreatives(update.creatives)
-    if (update.googleAds) setGoogleAds(update.googleAds)
+    if (update.business) {
+      setBusiness(update.business)
+      switchToTab('business')
+      // Switch back to agent after a peek
+      setTimeout(() => setActiveTab('agent'), 2500)
+    }
+    if (update.audiences) {
+      setAudiences(update.audiences)
+      switchToTab('audiences')
+      setTimeout(() => setActiveTab('agent'), 2500)
+    }
+    if (update.creatives) {
+      setCreatives(update.creatives)
+      switchToTab('creatives')
+      // Stay on creatives a bit longer — it's the payoff
+      setTimeout(() => setActiveTab('agent'), 3500)
+    }
+    if (update.googleAds) {
+      setGoogleAds(update.googleAds)
+      // Just notify, don't switch (creatives tab will show these too)
+      setNotifyTabs(prev => {
+        const next = new Set(prev)
+        next.add('creatives')
+        return next
+      })
+      setTimeout(() => {
+        setNotifyTabs(prev => {
+          const next = new Set(prev)
+          next.delete('creatives')
+          return next
+        })
+      }, 1500)
+    }
     if (update.campaign) {
       setCampaign(update.campaign)
       setIsComplete(true)
       playSuccess()
       setTimeout(() => fireConfetti(), 300)
       speak('Your campaign is ready to launch!', 'high')
+      switchToTab('campaign')
     }
     if (update.awaitApproval) {
       setAwaitingApproval(true)
       setIsBuilding(false)
       speak('Strategy complete. Ready to execute your campaign?', 'high')
     }
-  }, [])
+  }, [switchToTab])
 
   const handleSubmit = useCallback(async (inputUrl: string) => {
     setUrl(inputUrl)
@@ -131,6 +199,8 @@ export default function App() {
     setGoogleAds(undefined)
     setCampaign(undefined)
     setThinkingLines([])
+    setActiveTab('agent')
+    setNotifyTabs(new Set())
     strategyDataRef.current = null
 
     const result = await buildStrategy(inputUrl, handleUpdate, getUserMessages)
@@ -141,6 +211,7 @@ export default function App() {
     if (!strategyDataRef.current) return
     setAwaitingApproval(false)
     setIsBuilding(true)
+    setActiveTab('agent')
 
     await executeCampaign(
       strategyDataRef.current.business,
@@ -169,10 +240,41 @@ export default function App() {
     setThinkingLines([])
     setUrl('')
     setElapsed(0)
+    setActiveTab('agent')
+    setNotifyTabs(new Set())
     strategyDataRef.current = null
   }, [])
 
   const showBuilder = isBuilding || isComplete || awaitingApproval
+
+  // Tab availability
+  const tabAvailable: Record<TabId, boolean> = {
+    agent: true,
+    business: !!business,
+    audiences: !!audiences,
+    creatives: !!(creatives || googleAds),
+    campaign: !!campaign,
+  }
+
+  // Determine whether to show agent browser in Agent tab
+  const scrapeStage = stages.find(s => s.id === 'scrape')
+  const analyseStage = stages.find(s => s.id === 'analyse')
+  const showAgentBrowser = isBuilding && (
+    scrapeStage?.status === 'running' ||
+    analyseStage?.status === 'running' ||
+    (scrapeStage?.status === 'completed' && analyseStage?.status !== 'completed')
+  )
+  const scanDone = scrapeStage?.status === 'completed'
+  const showBrowserFallback = scanDone && analyseStage?.status === 'completed' && !business
+
+  // Map tab to ResultView
+  const tabToView: Record<TabId, ResultView | undefined> = {
+    agent: undefined,
+    business: 'business',
+    audiences: 'audiences',
+    creatives: 'creatives',
+    campaign: 'campaign',
+  }
 
   return (
     <div className="h-screen flex flex-col bg-bg overflow-hidden">
@@ -237,61 +339,112 @@ export default function App() {
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </header>
 
-      {/* Main */}
+      {/* Horizontal Progress Bar — only during build */}
+      {showBuilder && (
+        <BuildProgress stages={stages} />
+      )}
+
+      {/* Main Content */}
       {!showBuilder ? (
         <div className="flex-1 overflow-y-auto">
           <URLInput onSubmit={handleSubmit} isBuilding={isBuilding} />
         </div>
       ) : (
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left: Progress + Thinking + Chat */}
-          <div className="w-80 flex-shrink-0 flex flex-col border-r border-border">
-            <div className="p-5 flex-shrink-0">
-              <BuildProgress stages={stages} />
+        <>
+          {/* Tab Bar */}
+          <div className="flex-shrink-0 border-b border-border bg-surface/30 backdrop-blur-sm">
+            <div className="flex items-center gap-1 px-6 pt-1">
+              {TABS.map((tab) => {
+                const isActive = activeTab === tab.id
+                const available = tabAvailable[tab.id]
+                const isNotifying = notifyTabs.has(tab.id)
+
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => available && setActiveTab(tab.id)}
+                    disabled={!available}
+                    className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all cursor-pointer
+                      ${isActive
+                        ? 'text-accent-bright'
+                        : available
+                        ? 'text-text-muted hover:text-text'
+                        : 'text-text-dim/40 cursor-not-allowed'
+                      }
+                      ${isNotifying && !isActive ? 'tab-notify' : ''}
+                    `}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                    {/* Active indicator */}
+                    {isActive && (
+                      <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-accent rounded-full tab-underline-enter" />
+                    )}
+                    {/* Notification dot for new data */}
+                    {available && !isActive && isNotifying && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-bright pulse-dot" />
+                    )}
+                  </button>
+                )
+              })}
             </div>
-            <div className="flex-1 px-4 pb-0 min-h-0">
-              <ThinkingStream lines={thinkingLines} isActive={isBuilding} />
-            </div>
-            <ChatInput
-              onSend={handleUserMessage}
-              isBuilding={isBuilding}
-            />
           </div>
 
-          {/* Right: Results */}
-          <div className="flex-1 overflow-y-auto p-8">
-            {/* Agent Browser — visible during scrape/analyse stages */}
-            {(() => {
-              const scrapeStage = stages.find(s => s.id === 'scrape')
-              const analyseStage = stages.find(s => s.id === 'analyse')
-              const showBrowser = isBuilding && (
-                scrapeStage?.status === 'running' ||
-                analyseStage?.status === 'running' ||
-                (scrapeStage?.status === 'completed' && analyseStage?.status !== 'completed')
-              )
-              const scanDone = scrapeStage?.status === 'completed'
-              if (showBrowser || (scanDone && analyseStage?.status === 'completed' && !business)) {
-                return (
-                  <div className="mb-6">
-                    <AgentBrowser
-                      url={url}
-                      isActive={isBuilding && !scanDone}
-                      currentAction={currentStageAction}
-                      scanComplete={scanDone && analyseStage?.status === 'completed'}
-                    />
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto p-6 tab-content-fade">
+            {activeTab === 'agent' ? (
+              <div className="max-w-6xl mx-auto">
+                {/* Agent browser + ThinkingStream layout */}
+                <div className={`${showAgentBrowser || showBrowserFallback ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}`}>
+                  {(showAgentBrowser || showBrowserFallback) && (
+                    <div>
+                      <AgentBrowser
+                        url={url}
+                        isActive={isBuilding && !scanDone}
+                        currentAction={currentStageAction}
+                        scanComplete={scanDone && analyseStage?.status === 'completed'}
+                      />
+                    </div>
+                  )}
+                  <div className={`${showAgentBrowser || showBrowserFallback ? '' : 'max-w-3xl mx-auto'}`} style={{ minHeight: '300px' }}>
+                    <ThinkingStream lines={thinkingLines} isActive={isBuilding} />
                   </div>
-                )
-              }
-              return null
-            })()}
-            <ResultsPanel
+                </div>
+              </div>
+            ) : (
+              <ResultsPanel
+                view={tabToView[activeTab]}
+                business={business}
+                audiences={audiences}
+                creatives={creatives}
+                googleAds={googleAds}
+                campaign={campaign}
+                onCreativeEdit={handleCreativeEdit}
+                awaitingApproval={awaitingApproval}
+                onApprove={handleApprove}
+              />
+            )}
+          </div>
+
+          {/* Bottom Chat Input — full width */}
+          <ChatInput
+            onSend={handleUserMessage}
+            isBuilding={isBuilding}
+            isComplete={isComplete}
+          />
+        </>
+      )}
+
+      {/* Approval Gate Modal Overlay */}
+      {awaitingApproval && business && audiences && !creatives && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center modal-backdrop-enter">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => {}} />
+          {/* Modal content */}
+          <div className="relative z-10 w-full max-w-lg mx-4 modal-card-enter">
+            <ApprovalGate
               business={business}
               audiences={audiences}
-              creatives={creatives}
-              googleAds={googleAds}
-              campaign={campaign}
-              onCreativeEdit={handleCreativeEdit}
-              awaitingApproval={awaitingApproval}
               onApprove={handleApprove}
             />
           </div>

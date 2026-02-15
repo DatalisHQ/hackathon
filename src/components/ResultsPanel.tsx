@@ -3,7 +3,10 @@ import { Building2, Users, Zap, BarChart3, TrendingUp, DollarSign, Calendar, Eye
 import type { BusinessProfile, AudiencePersona, AdCreative, GoogleAd, CampaignConfig } from '../types'
 import { ABTestPanel } from './ABTestPanel'
 
+export type ResultView = 'business' | 'audiences' | 'creatives' | 'campaign'
+
 interface Props {
+  view?: ResultView
   business?: BusinessProfile
   audiences?: AudiencePersona[]
   creatives?: AdCreative[]
@@ -22,7 +25,7 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
   )
 }
 
-function BusinessCard({ business }: { business: BusinessProfile }) {
+export function BusinessCard({ business }: { business: BusinessProfile }) {
   return (
     <Section>
       <div className="gradient-border bg-surface rounded-2xl p-6">
@@ -81,14 +84,14 @@ function BusinessCard({ business }: { business: BusinessProfile }) {
   )
 }
 
-function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
+export function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
   return (
     <Section>
       <div className="flex items-center gap-2 mb-4">
         <Users className="w-4 h-4 text-blue-400" />
         <h3 className="text-sm font-semibold text-text">Target Audiences</h3>
       </div>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {audiences.map((a, i) => (
           <div key={i} className="gradient-border bg-surface rounded-2xl p-5 slide-in" style={{ animationDelay: `${i * 150}ms` }}>
             <div className="flex items-center gap-3 mb-3">
@@ -113,7 +116,7 @@ function AudienceCards({ audiences }: { audiences: AudiencePersona[] }) {
   )
 }
 
-function ApprovalGate({ business, audiences, onApprove }: { business: BusinessProfile; audiences: AudiencePersona[]; onApprove: () => void }) {
+export function ApprovalGate({ business, audiences, onApprove }: { business: BusinessProfile; audiences: AudiencePersona[]; onApprove: () => void }) {
   return (
     <Section>
       <div className="relative rounded-2xl overflow-hidden">
@@ -206,7 +209,7 @@ function EditableText({ value, onSave, className = '', multiline = false }: {
   )
 }
 
-function AdPreviewCards({ creatives, onEdit, brandColors }: { creatives: AdCreative[]; onEdit?: (id: string, field: string, value: string) => void; brandColors?: string[] }) {
+export function AdPreviewCards({ creatives, onEdit, brandColors }: { creatives: AdCreative[]; onEdit?: (id: string, field: string, value: string) => void; brandColors?: string[] }) {
   return (
     <Section>
       <div className="flex items-center gap-2 mb-4">
@@ -214,7 +217,7 @@ function AdPreviewCards({ creatives, onEdit, brandColors }: { creatives: AdCreat
         <h3 className="text-sm font-semibold text-text">Facebook Ad Creatives</h3>
         <span className="text-[10px] text-text-dim ml-auto">Click any text to edit</span>
       </div>
-      <div className="space-y-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
         {creatives.map((rawAd, i) => {
           const ad = { ...rawAd, _brandColors: brandColors } as AdCreative & { _brandColors?: string[] }
           return (
@@ -336,7 +339,7 @@ function AdPreviewCards({ creatives, onEdit, brandColors }: { creatives: AdCreat
   )
 }
 
-function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
+export function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
   return (
     <Section>
       <div className="flex items-center gap-2 mb-4">
@@ -344,7 +347,7 @@ function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
         <h3 className="text-sm font-semibold text-text">Google Search Ads</h3>
         <span className="text-[10px] text-text-dim ml-auto">Preview</span>
       </div>
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {googleAds.map((ad, i) => (
           <div
             key={ad.id}
@@ -389,7 +392,7 @@ function GoogleAdCards({ googleAds }: { googleAds: GoogleAd[] }) {
   )
 }
 
-function CampaignSummary({ campaign }: { campaign: CampaignConfig }) {
+export function CampaignSummary({ campaign }: { campaign: CampaignConfig }) {
   return (
     <Section>
       <div className="flex items-center gap-2 mb-4">
@@ -398,7 +401,7 @@ function CampaignSummary({ campaign }: { campaign: CampaignConfig }) {
       </div>
       <div className="gradient-border bg-surface rounded-2xl p-6">
         {/* Revolut-style stat grid */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <StatCard icon={<Target className="w-5 h-5 text-accent" />} label="Objective" value={campaign.objective} />
           <StatCard icon={<DollarSign className="w-5 h-5 text-success" />} label="Daily Budget" value={`$${campaign.dailyBudget} ${campaign.currency}`} />
           <StatCard icon={<Calendar className="w-5 h-5 text-blue-400" />} label="Duration" value={`${campaign.duration} days`} />
@@ -465,7 +468,38 @@ function ShareButton() {
   )
 }
 
-export function ResultsPanel({ business, audiences, creatives, googleAds, campaign, onCreativeEdit, awaitingApproval, onApprove }: Props) {
+export function ResultsPanel({ view, business, audiences, creatives, googleAds, campaign, onCreativeEdit, awaitingApproval, onApprove }: Props) {
+  // If view prop is specified, render only that section
+  if (view) {
+    switch (view) {
+      case 'business':
+        return business ? (
+          <div className="max-w-3xl mx-auto"><BusinessCard business={business} /></div>
+        ) : null
+      case 'audiences':
+        return audiences ? (
+          <div className="max-w-5xl mx-auto"><AudienceCards audiences={audiences} /></div>
+        ) : null
+      case 'creatives':
+        return (
+          <div className="max-w-6xl mx-auto space-y-8">
+            {creatives && <AdPreviewCards creatives={creatives} onEdit={onCreativeEdit} brandColors={business?.colors} />}
+            {googleAds && <GoogleAdCards googleAds={googleAds} />}
+          </div>
+        )
+      case 'campaign':
+        return (
+          <div className="max-w-4xl mx-auto space-y-8">
+            {campaign && <CampaignSummary campaign={campaign} />}
+            {creatives && business && campaign && (
+              <ABTestPanel creatives={creatives} business={business} campaign={campaign} />
+            )}
+          </div>
+        )
+    }
+  }
+
+  // Legacy: render all sections sequentially (fallback)
   const hasAnything = business || audiences || creatives || googleAds || campaign
 
   if (!hasAnything) {

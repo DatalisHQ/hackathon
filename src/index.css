@@ -176,3 +176,61 @@ body {
   opacity: 0.4;
   pointer-events: none;
 }
+
+/* ─── New: Tab styles ─────────────────────────────────────────── */
+
+@keyframes tab-notify-glow {
+  0% { text-shadow: none; }
+  30% { text-shadow: 0 0 8px rgba(129, 140, 248, 0.8), 0 0 16px rgba(129, 140, 248, 0.4); }
+  100% { text-shadow: none; }
+}
+
+.tab-notify {
+  animation: tab-notify-glow 1.5s ease-out;
+}
+
+@keyframes tab-underline-enter {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+.tab-underline-enter {
+  animation: tab-underline-enter 0.2s ease-out both;
+}
+
+/* Tab content crossfade */
+.tab-content-fade {
+  animation: fade-in 0.15s ease-out;
+}
+
+/* ─── New: Progress bar dot pulse ────────────────────────────── */
+
+@keyframes progress-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+}
+
+.progress-dot-pulse {
+  animation: progress-dot-pulse 2s ease-in-out infinite;
+}
+
+/* ─── New: Modal overlay animations ──────────────────────────── */
+
+@keyframes modal-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-backdrop-enter {
+  animation: modal-backdrop-enter 0.2s ease-out both;
+}
+
+@keyframes modal-card-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-card-enter {
+  animation: modal-card-enter 0.25s ease-out both;
+  animation-delay: 0.05s;
+}
