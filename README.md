@@ -2,6 +2,8 @@
 
 Paste a URL. Get an ad campaign. That's it.
 
+**Demo:** https://www.loom.com/share/ff8e4063a2f64025841c988b5d067a83
+
 ## What is this
 
 AdForge is an AI agent that builds Facebook and Google ad campaigns from scratch. You give it a business URL, it scrapes the site, figures out what the business does, builds audience personas, writes ad copy, generates creatives, and assembles a ready-to-launch campaign. Takes about 60 seconds.
