@@ -7,6 +7,7 @@ import { ResultsPanel } from './components/ResultsPanel'
 import { ThinkingStream } from './components/ThinkingStream'
 import type { ThinkingLine } from './components/ThinkingStream'
 import { AgentBrowser } from './components/AgentBrowser'
+import { ChatInput } from './components/ChatInput'
 import { buildStrategy, executeCampaign } from './lib/engine'
 import { playTick, playSuccess, playStageComplete } from './lib/sounds'
 import { fireConfetti } from './lib/confetti'
@@ -41,6 +42,23 @@ export default function App() {
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const startTimeRef = useRef<number>(0)
   const strategyDataRef = useRef<{ business: BusinessProfile; audiences: AudiencePersona[] } | null>(null)
+  const userMessagesRef = useRef<string[]>([])
+
+  const getUserMessages = useCallback((): string[] => {
+    const msgs = [...userMessagesRef.current]
+    userMessagesRef.current = []
+    return msgs
+  }, [])
+
+  const handleUserMessage = useCallback((message: string) => {
+    userMessagesRef.current.push(message)
+    setThinkingLines(prev => [...prev, {
+      id: crypto.randomUUID(),
+      type: 'user' as const,
+      text: message,
+      timestamp: Date.now(),
+    }])
+  }, [])
 
   useEffect(() => {
     if (isBuilding) {
@@ -115,9 +133,9 @@ export default function App() {
     setThinkingLines([])
     strategyDataRef.current = null
 
-    const result = await buildStrategy(inputUrl, handleUpdate)
+    const result = await buildStrategy(inputUrl, handleUpdate, getUserMessages)
     strategyDataRef.current = result
-  }, [handleUpdate])
+  }, [handleUpdate, getUserMessages])
 
   const handleApprove = useCallback(async () => {
     if (!strategyDataRef.current) return
@@ -128,10 +146,11 @@ export default function App() {
       strategyDataRef.current.business,
       strategyDataRef.current.audiences,
       handleUpdate,
+      getUserMessages,
     )
 
     setIsBuilding(false)
-  }, [handleUpdate])
+  }, [handleUpdate, getUserMessages])
 
   const handleCreativeEdit = useCallback((id: string, field: string, value: string) => {
     setCreatives(prev => prev?.map(c => c.id === id ? { ...c, [field]: value } : c))
@@ -225,14 +244,18 @@ export default function App() {
         </div>
       ) : (
         <div className="flex-1 flex overflow-hidden">
-          {/* Left: Progress + Thinking */}
+          {/* Left: Progress + Thinking + Chat */}
           <div className="w-80 flex-shrink-0 flex flex-col border-r border-border">
             <div className="p-5 flex-shrink-0">
               <BuildProgress stages={stages} />
             </div>
-            <div className="flex-1 px-4 pb-4 min-h-0">
+            <div className="flex-1 px-4 pb-0 min-h-0">
               <ThinkingStream lines={thinkingLines} isActive={isBuilding} />
             </div>
+            <ChatInput
+              onSend={handleUserMessage}
+              isBuilding={isBuilding}
+            />
           </div>
 
           {/* Right: Results */}

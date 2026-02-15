@@ -10,7 +10,7 @@ function randomBetween(min: number, max: number): number {
 
 // ─── Callbacks ─────────────────────────────────────────────────────────────
 
-export type ThinkingLineType = 'system' | 'data' | 'insight' | 'decision' | 'highlight'
+export type ThinkingLineType = 'system' | 'data' | 'insight' | 'decision' | 'highlight' | 'user'
 
 type UpdateCallback = (update: {
   stage?: { id: StageId; changes: Partial<Stage> }
@@ -67,7 +67,12 @@ async function scrapeWebsite(url: string): Promise<{ html: string; title: string
 
 // ─── Claude API (via proxy) ────────────────────────────────────────────────
 
-async function callClaude(prompt: string, maxTokens: number = 3000): Promise<string> {
+async function callClaude(prompt: string, maxTokens: number = 3000, userContext?: string[]): Promise<string> {
+  // Prepend user context if provided
+  if (userContext && userContext.length > 0) {
+    const contextBlock = `[ADDITIONAL USER CONTEXT]:\n${userContext.map(m => `- User says: "${m}"`).join('\n')}\n\nPlease incorporate the above user instructions into your response.\n\n---\n\n`
+    prompt = contextBlock + prompt
+  }
   // Try the serverless proxy first
   try {
     const res = await fetch('/api/claude', {
@@ -87,7 +92,7 @@ async function callClaude(prompt: string, maxTokens: number = 3000): Promise<str
 
 // ─── Business Analysis ─────────────────────────────────────────────────────
 
-async function analyseBusiness(url: string, scraped: { title: string; description: string; text: string }): Promise<BusinessProfile> {
+async function analyseBusiness(url: string, scraped: { title: string; description: string; text: string }, userContext?: string[]): Promise<BusinessProfile> {
   const domain = url.replace(/https?:\/\//, '').split('/')[0]
   
   const prompt = `Analyse this business website and return a JSON profile.
@@ -110,7 +115,7 @@ Return ONLY valid JSON:
   "colors": ["#hex1", "#hex2", "#hex3"]
 }`
 
-  const response = await callClaude(prompt, 1500)
+  const response = await callClaude(prompt, 1500, userContext)
   
   try {
     const match = response.match(/\{[\s\S]*\}/)
@@ -134,7 +139,7 @@ Return ONLY valid JSON:
 
 // ─── Audience Generation ───────────────────────────────────────────────────
 
-async function generateAudiences(business: BusinessProfile): Promise<AudiencePersona[]> {
+async function generateAudiences(business: BusinessProfile, userContext?: string[]): Promise<AudiencePersona[]> {
   const prompt = `Create 3 target audience personas for Facebook ads for this business:
 
 Business: ${business.name}
@@ -154,7 +159,7 @@ Return ONLY a JSON array of 3 personas:
   "emoji": "👩‍💼"
 }]`
 
-  const response = await callClaude(prompt, 2000)
+  const response = await callClaude(prompt, 2000, userContext)
   
   try {
     const match = response.match(/\[[\s\S]*\]/)
@@ -195,7 +200,7 @@ Return ONLY a JSON array of 3 personas:
 
 // ─── Ad Copy Generation ────────────────────────────────────────────────────
 
-async function generateAdCopy(business: BusinessProfile, audiences: AudiencePersona[]): Promise<AdCreative[]> {
+async function generateAdCopy(business: BusinessProfile, audiences: AudiencePersona[], userContext?: string[]): Promise<AdCreative[]> {
   const prompt = `Write 3 Facebook ad variants for this business. Each should target a different angle.
 
 Business: ${business.name}
@@ -214,7 +219,7 @@ Return ONLY a JSON array:
   "angle": "Name of the creative angle (e.g. 'Social Proof', 'Pain Point', 'Aspiration')"
 }]`
 
-  const response = await callClaude(prompt, 2000)
+  const response = await callClaude(prompt, 2000, userContext)
   
   try {
     const match = response.match(/\[[\s\S]*\]/)
@@ -255,7 +260,7 @@ Return ONLY a JSON array:
 
 // ─── Google Ads Copy Generation ────────────────────────────────────────────
 
-async function generateGoogleAds(business: BusinessProfile, audiences: AudiencePersona[]): Promise<GoogleAd[]> {
+async function generateGoogleAds(business: BusinessProfile, audiences: AudiencePersona[], userContext?: string[]): Promise<GoogleAd[]> {
   const domain = business.url.replace(/https?:\/\//, '').split('/')[0]
 
   const prompt = `Create 3 Google Search ad variants for this business.
@@ -282,7 +287,7 @@ Return ONLY a JSON array. Each ad has:
   "finalUrl": "${business.url}"
 }]`
 
-  const response = await callClaude(prompt, 2000)
+  const response = await callClaude(prompt, 2000, userContext)
 
   try {
     const match = response.match(/\[[\s\S]*\]/)
@@ -426,7 +431,28 @@ const thinkingTexts: Record<StageId, string[]> = {
 export async function buildStrategy(
   url: string,
   onUpdate: UpdateCallback,
+  getUserMessages?: () => string[],
 ): Promise<{ business: BusinessProfile; audiences: AudiencePersona[] }> {
+  const pendingUserContext: string[] = []
+
+  function drainUserMessages() {
+    if (!getUserMessages) return
+    const messages = getUserMessages()
+    if (messages.length > 0) {
+      for (const msg of messages) {
+        onUpdate({ thinking: { type: 'system', text: `→ Incorporating your feedback: "${msg}"` } })
+      }
+      pendingUserContext.push(...messages)
+    }
+  }
+
+  function consumeUserContext(): string[] | undefined {
+    if (pendingUserContext.length === 0) return undefined
+    const ctx = [...pendingUserContext]
+    pendingUserContext.length = 0
+    return ctx
+  }
+
   // ── Stage 1: Scrape ──
   onUpdate({ stage: { id: 'scrape', changes: { status: 'running', startedAt: Date.now() } } })
   onUpdate({ thinking: { type: 'system', text: `→ Connecting to ${url}...` } })
@@ -463,6 +489,7 @@ export async function buildStrategy(
   }}})
 
   await delay(300)
+  drainUserMessages()
 
   // ── Stage 2: Analyse ──
   onUpdate({ stage: { id: 'analyse', changes: { status: 'running', startedAt: Date.now() } } })
@@ -473,7 +500,7 @@ export async function buildStrategy(
     await delay(randomBetween(500, 1000))
   }
 
-  const business = await analyseBusiness(url, scraped)
+  const business = await analyseBusiness(url, scraped, consumeUserContext())
   
   onUpdate({ thinking: { type: 'insight', text: `Business identified: ${business.name}` } })
   await delay(200)
@@ -502,6 +529,7 @@ export async function buildStrategy(
   }}})
 
   await delay(300)
+  drainUserMessages()
 
   // ── Stage 3: Audience ──
   onUpdate({ stage: { id: 'audience', changes: { status: 'running', startedAt: Date.now() } } })
@@ -512,7 +540,7 @@ export async function buildStrategy(
     await delay(randomBetween(400, 900))
   }
 
-  const audiences = await generateAudiences(business)
+  const audiences = await generateAudiences(business, consumeUserContext())
   
   for (const a of audiences) {
     onUpdate({ thinking: { type: 'decision', text: `${a.emoji} Persona: "${a.name}" (${a.age})` } })
@@ -535,6 +563,7 @@ export async function buildStrategy(
   }}})
 
   await delay(300)
+  drainUserMessages()
 
   // ── Stage 4: Strategy ──
   onUpdate({ stage: { id: 'strategy', changes: { status: 'running', startedAt: Date.now() } } })
@@ -573,8 +602,30 @@ export async function executeCampaign(
   business: BusinessProfile,
   audiences: AudiencePersona[],
   onUpdate: UpdateCallback,
+  getUserMessages?: () => string[],
 ): Promise<void> {
+  const pendingUserContext: string[] = []
+
+  function drainUserMessages() {
+    if (!getUserMessages) return
+    const messages = getUserMessages()
+    if (messages.length > 0) {
+      for (const msg of messages) {
+        onUpdate({ thinking: { type: 'system', text: `→ Incorporating your feedback: "${msg}"` } })
+      }
+      pendingUserContext.push(...messages)
+    }
+  }
+
+  function consumeUserContext(): string[] | undefined {
+    if (pendingUserContext.length === 0) return undefined
+    const ctx = [...pendingUserContext]
+    pendingUserContext.length = 0
+    return ctx
+  }
+
   await delay(300)
+  drainUserMessages()
 
   // ── Stage 5: Copy ──
   onUpdate({ stage: { id: 'copy', changes: { status: 'running', startedAt: Date.now() } } })
@@ -585,7 +636,7 @@ export async function executeCampaign(
     await delay(randomBetween(500, 1000))
   }
 
-  const creatives = await generateAdCopy(business, audiences)
+  const creatives = await generateAdCopy(business, audiences, consumeUserContext())
   
   for (let i = 0; i < creatives.length; i++) {
     const c = creatives[i]
@@ -607,6 +658,9 @@ export async function executeCampaign(
   
   onUpdate({ creatives })
 
+  // Check for user messages before Google ads
+  drainUserMessages()
+
   // Now generate Google ads
   onUpdate({ thinking: { type: 'system', text: '→ Writing Google Search ad copy...' } })
   for (const text of thinkingTexts.copy.slice(5)) {
@@ -614,7 +668,7 @@ export async function executeCampaign(
     await delay(randomBetween(400, 800))
   }
 
-  const googleAds = await generateGoogleAds(business, audiences)
+  const googleAds = await generateGoogleAds(business, audiences, consumeUserContext())
 
   for (let i = 0; i < googleAds.length; i++) {
     const ad = googleAds[i]
@@ -636,6 +690,7 @@ export async function executeCampaign(
   }}})
 
   await delay(300)
+  drainUserMessages()
 
   // ── Stage 6: Creatives ──
   onUpdate({ stage: { id: 'creatives', changes: { status: 'running', startedAt: Date.now() } } })
@@ -658,6 +713,7 @@ export async function executeCampaign(
   }}})
 
   await delay(300)
+  drainUserMessages()
 
   // ── Stage 7: Campaign assembly ──
   onUpdate({ stage: { id: 'campaign', changes: { status: 'running', startedAt: Date.now() } } })
